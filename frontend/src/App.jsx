@@ -9,7 +9,6 @@ import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import FollowupLeads from './pages/FollowupLeads';
 import LeadDetails from './pages/LeadDetails';
-import FollowUps from './pages/FollowUps';
 import Proposals from './pages/Proposals';
 import Clients from './pages/Clients';
 import Projects from './pages/Projects';
@@ -45,7 +44,6 @@ const App = () => {
         <Route path="/leads" element={<TabPage tabId="leads"><Leads /></TabPage>} />
         <Route path="/followup-leads" element={<TabPage tabId="followup-leads"><FollowupLeads /></TabPage>} />
         <Route path="/leads/:id" element={<TabPage tabId="leads"><LeadDetails /></TabPage>} />
-        <Route path="/follow-ups" element={<TabPage tabId="follow-ups"><FollowUps /></TabPage>} />
         <Route path="/proposals" element={<TabPage tabId="proposals"><Proposals /></TabPage>} />
         <Route path="/clients" element={<TabPage tabId="clients"><Clients /></TabPage>} />
         <Route path="/projects" element={<TabPage tabId="projects"><Projects /></TabPage>} />

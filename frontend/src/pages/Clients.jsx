@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Edit, Building2 } from 'lucide-react';
 import { clientsAPI } from '../services/api';
-import { formatDate } from '../utils/helpers';
+import { formatDate, displayValue } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
@@ -62,8 +62,8 @@ const Clients = () => {
       <div className="card mb-6"><SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search clients..." /></div>
 
       <div className="card overflow-x-auto">
-        {loading ? <TableSkeleton cols={5} /> : clients.length === 0 ? (
-          <EmptyState icon={Building2} title="No clients" description="Clients are auto-created when leads are won" />
+        {loading ? <TableSkeleton cols={6} /> : clients.length === 0 ? (
+          <EmptyState icon={Building2} title="No clients" description="Clients appear when a proposal is approved" />
         ) : (
           <>
             <table className="w-full text-sm">
@@ -72,6 +72,7 @@ const Clients = () => {
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Client</th>
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Company</th>
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Email</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Phone</th>
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Created</th>
                   <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
                 </tr>
@@ -81,7 +82,8 @@ const Clients = () => {
                   <tr key={c._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
                     <td className="py-3 px-2 font-medium">{c.clientName}</td>
                     <td className="py-3 px-2">{c.companyName}</td>
-                    <td className="py-3 px-2 text-secondary-500">{c.contactDetails?.email || '-'}</td>
+                    <td className="py-3 px-2 text-secondary-500">{displayValue(c.contactDetails?.email)}</td>
+                    <td className="py-3 px-2 text-secondary-500">{displayValue(c.contactDetails?.phone)}</td>
                     <td className="py-3 px-2 text-secondary-500">{formatDate(c.createdAt)}</td>
                     <td className="py-3 px-2">
                       <div className="flex justify-end gap-1">

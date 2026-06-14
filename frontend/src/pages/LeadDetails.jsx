@@ -5,7 +5,7 @@ import {
   ArrowLeft, Mail, Phone, MapPin, Building, Calendar, Upload, FileText, Send,
 } from 'lucide-react';
 import { leadsAPI, followUpsAPI, proposalsAPI, documentsAPI } from '../services/api';
-import { formatCurrency, formatDate, formatDateTime } from '../utils/helpers';
+import { formatCurrency, formatDate, formatDateTime, displayValue } from '../utils/helpers';
 import StatusBadge from '../components/common/StatusBadge';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Modal from '../components/common/Modal';
@@ -87,11 +87,11 @@ const LeadDetails = () => {
   if (!lead) return <div className="text-center py-20">Lead not found</div>;
 
   const infoItems = [
-    { icon: Mail, label: 'Email', value: lead.email },
-    { icon: Phone, label: 'Phone', value: lead.mobileNumber },
-    { icon: MapPin, label: 'City', value: lead.city || '-' },
-    { icon: MapPin, label: 'State', value: lead.state || '-' },
-    { icon: Building, label: 'Company', value: lead.companyName },
+    { icon: Mail, label: 'Email', value: displayValue(lead.email) },
+    { icon: Phone, label: 'Phone', value: displayValue(lead.mobileNumber) },
+    { icon: MapPin, label: 'City', value: displayValue(lead.city) },
+    { icon: MapPin, label: 'State', value: displayValue(lead.state) },
+    { icon: Building, label: 'Company', value: displayValue(lead.companyName) },
     { icon: Calendar, label: 'Created', value: formatDate(lead.createdAt) },
   ];
 
@@ -126,9 +126,9 @@ const LeadDetails = () => {
                 </div>
               ))}
               <div><p className="text-xs text-secondary-500">Source</p><p className="text-sm font-medium">{lead.leadSource}</p></div>
-              <div><p className="text-xs text-secondary-500">Business Type</p><p className="text-sm font-medium">{lead.businessType || '-'}</p></div>
-              <div><p className="text-xs text-secondary-500">Requirement</p><p className="text-sm font-medium">{lead.requirementType}</p></div>
-              <div><p className="text-xs text-secondary-500">Assigned To</p><p className="text-sm font-medium">{lead.assignedTo?.name || '-'}</p></div>
+              <div><p className="text-xs text-secondary-500">Business Type</p><p className="text-sm font-medium">{displayValue(lead.businessType)}</p></div>
+              <div><p className="text-xs text-secondary-500">Requirement</p><p className="text-sm font-medium">{displayValue(lead.requirementType)}</p></div>
+              <div><p className="text-xs text-secondary-500">Assigned To</p><p className="text-sm font-medium">{displayValue(lead.assignedTo?.name)}</p></div>
               <div><p className="text-xs text-secondary-500">Revenue</p><p className="text-sm font-medium">{formatCurrency(lead.revenue)}</p></div>
             </div>
             {lead.notes && (

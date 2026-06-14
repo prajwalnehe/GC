@@ -4,13 +4,13 @@ import toast from 'react-hot-toast';
 import { Edit, Eye, ArrowUpDown, UserCheck, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
-import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate } from '../utils/helpers';
+import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate, displayValue } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { PageHeader, SearchBar, Pagination } from '../components/common/PageElements';
+import { SearchBar, Pagination } from '../components/common/PageElements';
 
 const FollowupLeads = () => {
   const { isAdmin } = useAuth();
@@ -84,7 +84,7 @@ const FollowupLeads = () => {
       await leadsAPI.markClientFollowup(lead._id, { type });
       setLeads((prev) => prev.filter((l) => l._id !== lead._id));
       setTotal((prev) => Math.max(0, prev - 1));
-      toast.success(type === 'IN' ? 'Added to final Client followup (IN)' : 'Marked as Client OUT');
+      toast.success(`Added to Proposals (${type})`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update client follow-up');
       fetchLeads();
@@ -105,47 +105,30 @@ const FollowupLeads = () => {
 
   return (
     <div>
-      <PageHeader
-        title="Followup Leads"
-        subtitle={`${total} ${isInterestedView ? 'interested' : 'not interested'} leads`}
-      />
-
-      <div className={`card mb-6 p-4 border ${
-        isInterestedView
-          ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800'
-          : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'
-      }`}
-      >
-        <p className={`text-sm ${isInterestedView ? 'text-emerald-800 dark:text-emerald-200' : 'text-red-800 dark:text-red-200'}`}>
-          {isInterestedView ? (
-            <>Leads marked as <strong>Interested</strong> from the Leads page appear here.</>
-          ) : (
-            <>Leads marked as <strong>Not Interested</strong> from the Leads page appear here.</>
-          )}
-        </p>
-      </div>
-
-      <div className="card mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <select
+      <div className="mb-6 flex flex-row flex-nowrap items-center gap-3 overflow-x-auto">
+        <h1 className="text-2xl font-bold text-secondary-800 dark:text-secondary-100 shrink-0 whitespace-nowrap">
+          Followup Leads
+        </h1>
+        <select
             value={interestFilter}
             onChange={(e) => { setInterestFilter(e.target.value); setPage(1); }}
-            className="input-field"
+            className="input-field min-w-[140px] flex-1"
           >
             <option value={FOLLOWUP_LEAD_STATUS}>Interested</option>
             <option value={NOT_INTERESTED_STATUS}>Not Interested</option>
           </select>
-          <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
-          <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field">
+          <div className="flex-[2] min-w-[180px]">
+            <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
+          </div>
+          <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field min-w-[140px] flex-1">
             <option value="">All Sources</option>
             {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field">
+          <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field min-w-[140px] flex-1">
             <option value="createdAt-desc">Newest First</option>
             <option value="createdAt-asc">Oldest First</option>
             <option value="leadName-asc">Name A-Z</option>
-          </select>
-        </div>
+        </select>
       </div>
 
       <div className="card overflow-x-auto">
@@ -168,6 +151,7 @@ const FollowupLeads = () => {
                   {[
                     { key: 'leadName', label: 'Lead Person Name' },
                     { key: 'companyName', label: 'Company' },
+                    { key: 'businessType', label: 'Business Type' },
                     { key: 'mobileNumber', label: 'Mobile' },
                     { key: 'state', label: 'State' },
                     { key: 'createdAt', label: 'Date' },
@@ -177,11 +161,8 @@ const FollowupLeads = () => {
                     </th>
                   ))}
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Status</th>
-                  {isAdmin && (
-                    <th className="text-left py-3 px-2 font-medium text-secondary-500">Follow-up By</th>
-                  )}
                   {isAdmin && isInterestedView && (
-                    <th className="text-left py-3 px-2 font-medium text-secondary-500">Client</th>
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500">IN / OUT</th>
                   )}
                   <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
                 </tr>
@@ -191,21 +172,14 @@ const FollowupLeads = () => {
                   <tr key={lead._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
                     <td className="py-3 px-2 font-medium">{lead.leadName}</td>
                     <td className="py-3 px-2">{lead.companyName}</td>
+                    <td className="py-3 px-2 text-secondary-500">{displayValue(lead.businessType)}</td>
                     <td className="py-3 px-2 text-secondary-500">{lead.mobileNumber}</td>
-                    <td className="py-3 px-2 text-secondary-500">{lead.state || '-'}</td>
+                    <td className="py-3 px-2 text-secondary-500">{displayValue(lead.state)}</td>
                     <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
                     <td className="py-3 px-2"><StatusBadge status={lead.status} /></td>
-                    {isAdmin && (
-                      <td className="py-3 px-2">
-                        <p className="font-medium">{lead.followUpBy?.name || '-'}</p>
-                        {lead.followUpBy?.role && (
-                          <p className="text-xs text-secondary-500">{lead.followUpBy.role}</p>
-                        )}
-                      </td>
-                    )}
                     {isAdmin && isInterestedView && (
                       <td className="py-3 px-2">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-col items-start gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleClientFollowup(lead, 'IN')}
@@ -213,7 +187,7 @@ const FollowupLeads = () => {
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
                           >
                             <LogIn className="w-3.5 h-3.5" />
-                            Client IN
+                            IN
                           </button>
                           <button
                             type="button"
@@ -222,7 +196,7 @@ const FollowupLeads = () => {
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300"
                           >
                             <LogOut className="w-3.5 h-3.5" />
-                            Client OUT
+                            OUT
                           </button>
                         </div>
                       </td>

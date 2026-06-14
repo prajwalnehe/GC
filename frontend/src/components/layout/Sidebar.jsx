@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, UserCircle, FolderKanban, CreditCard,
-  FileText, Calendar, Building2, Settings, ChevronLeft, ChevronRight, Code2, UserCheck,
+  FileText, Building2, Settings, ChevronLeft, ChevronRight, Code2, UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { NAV_TABS } from '../../utils/navTabs';
@@ -11,7 +11,6 @@ const iconMap = {
   dashboard: LayoutDashboard,
   leads: Users,
   'followup-leads': UserCheck,
-  'follow-ups': Calendar,
   proposals: FileText,
   clients: Building2,
   projects: FolderKanban,

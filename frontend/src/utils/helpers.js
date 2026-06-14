@@ -62,7 +62,8 @@ export const REQUIREMENT_TYPES = [
   'Other',
 ];
 
-export const PROPOSAL_STATUSES = ['Draft', 'Sent', 'Approved', 'Rejected'];
+export const PROPOSAL_STATUSES = ['Pending', 'Sent', 'Approved', 'Rejected'];
+export const PROPOSAL_TYPES = ['IN', 'OUT'];
 
 export const PROJECT_STATUSES = ['Planning', 'In Progress', 'Testing', 'Completed', 'On Hold'];
 
@@ -94,7 +95,6 @@ export const getStatusColor = (status) => {
     'Won': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     'Lost': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
     'On Hold': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-    'Draft': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
     'Sent': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     'Approved': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     'Rejected': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
@@ -110,6 +110,12 @@ export const getStatusColor = (status) => {
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
+export const displayValue = (value) => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value.trim();
+  return value;
+};
+
 export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -119,7 +125,7 @@ export const formatCurrency = (amount) => {
 };
 
 export const formatDate = (date) => {
-  if (!date) return '-';
+  if (!date) return '';
   return new Date(date).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -128,7 +134,7 @@ export const formatDate = (date) => {
 };
 
 export const formatDateTime = (date) => {
-  if (!date) return '-';
+  if (!date) return '';
   return new Date(date).toLocaleString('en-IN', {
     day: '2-digit',
     month: 'short',

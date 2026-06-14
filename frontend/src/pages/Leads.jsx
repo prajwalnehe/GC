@@ -4,13 +4,13 @@ import toast from 'react-hot-toast';
 import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
-import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate } from '../utils/helpers';
+import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate, displayValue } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { PageHeader, SearchBar, Pagination } from '../components/common/PageElements';
+import { SearchBar, Pagination } from '../components/common/PageElements';
 import { Users } from 'lucide-react';
 
 const Leads = () => {
@@ -37,10 +37,13 @@ const Leads = () => {
     try {
       const params = {
         search, leadSource: sourceFilter, sortBy, sortOrder, page, limit: 10,
-        mainList: true,
+        mainList: 'true',
       };
       const { data } = await leadsAPI.getAll(params);
-      setLeads(data.leads);
+      const visibleLeads = data.leads.filter(
+        (lead) => lead.status !== FOLLOWUP_LEAD_STATUS && lead.status !== NOT_INTERESTED_STATUS
+      );
+      setLeads(visibleLeads);
       setTotal(data.total);
       setPages(data.pages);
     } catch {
@@ -153,36 +156,30 @@ const Leads = () => {
 
   return (
     <div>
-      <PageHeader
-        title="Leads"
-        subtitle={`${total} total leads`}
-        action={
-          <div className="flex gap-2">
-            <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
-              <Download className="w-4 h-4" /> Export
-            </button>
-            {canAddLead && (
-              <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
-                <Plus className="w-4 h-4" /> Add Lead
-              </button>
-            )}
-          </div>
-        }
-      />
-
-      <div className="card mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-6 flex flex-row flex-nowrap items-center gap-3 overflow-x-auto">
+        <h1 className="text-2xl font-bold text-secondary-800 dark:text-secondary-100 shrink-0 whitespace-nowrap">
+          Leads
+        </h1>
+        <div className="flex-[2] min-w-[180px]">
           <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
-          <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field">
-            <option value="">All Sources</option>
-            {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field">
-            <option value="createdAt-desc">Newest First</option>
-            <option value="createdAt-asc">Oldest First</option>
-            <option value="leadName-asc">Name A-Z</option>
-          </select>
         </div>
+        <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field min-w-[140px] flex-1">
+          <option value="">All Sources</option>
+          {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field min-w-[140px] flex-1">
+          <option value="createdAt-desc">Newest First</option>
+          <option value="createdAt-asc">Oldest First</option>
+          <option value="leadName-asc">Emp Name A-Z</option>
+        </select>
+        <button onClick={handleExport} className="btn-secondary flex items-center gap-2 shrink-0 whitespace-nowrap">
+          <Download className="w-4 h-4" /> Export
+        </button>
+        {canAddLead && (
+          <button onClick={handleCreate} className="btn-primary flex items-center gap-2 shrink-0 whitespace-nowrap">
+            <Plus className="w-4 h-4" /> Add Lead
+          </button>
+        )}
       </div>
 
       <div className="card overflow-x-auto">
@@ -201,8 +198,9 @@ const Leads = () => {
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
                   {[
-                    { key: 'leadName', label: 'Lead Person Name' },
+                    { key: 'leadName', label: 'Emp Name' },
                     { key: 'companyName', label: 'Company' },
+                    { key: 'businessType', label: 'Business Type' },
                     { key: 'mobileNumber', label: 'Mobile' },
                     { key: 'status', label: 'Status' },
                     { key: 'createdAt', label: 'Date' },
@@ -220,8 +218,9 @@ const Leads = () => {
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                    <td className="py-3 px-2 font-medium">{lead.leadName}</td>
+                    <td className="py-3 px-2 font-medium">{displayValue(lead.createdBy?.name || lead.leadName)}</td>
                     <td className="py-3 px-2">{lead.companyName}</td>
+                    <td className="py-3 px-2 text-secondary-500">{displayValue(lead.businessType)}</td>
                     <td className="py-3 px-2 text-secondary-500">{lead.mobileNumber}</td>
                     <td className="py-3 px-2">
                       <StatusBadge status={lead.status} />
@@ -229,7 +228,7 @@ const Leads = () => {
                     <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
                     {canViewAllLeads && (
                       <td className="py-3 px-2">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-col items-start gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleInterest(lead, true)}
