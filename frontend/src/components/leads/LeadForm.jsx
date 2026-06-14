@@ -1,4 +1,4 @@
-import { LEAD_SOURCES, REQUIREMENT_TYPES, INDIAN_STATES, BUSINESS_TYPES } from '../../utils/helpers';
+import { REQUIREMENT_TYPES, BUSINESS_TYPES } from '../../utils/helpers';
 
 const LeadForm = ({ form, setForm, users = [], onSubmit, loading, submitLabel = 'Save Lead', isEdit = false }) => (
   <form onSubmit={onSubmit} className="space-y-4">
@@ -36,19 +36,6 @@ const LeadForm = ({ form, setForm, users = [], onSubmit, loading, submitLabel = 
       <div>
         <label className="block text-sm font-medium mb-1.5">City</label>
         <input type="text" value={form.city || ''} onChange={(e) => setForm({ ...form, city: e.target.value })} className="input-field" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1.5">State</label>
-        <select value={form.state || ''} onChange={(e) => setForm({ ...form, state: e.target.value })} className="input-field">
-          <option value="">Select state</option>
-          {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Lead Source</label>
-        <select value={form.leadSource || 'Website'} onChange={(e) => setForm({ ...form, leadSource: e.target.value })} className="input-field">
-          {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
       </div>
       <div>
         <label className="block text-sm font-medium mb-1.5">Requirement Type</label>

@@ -5,7 +5,7 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((config) => {
-  const user = JSON.parse(localStorage.getItem('growwcode_user') || 'null');
+  const user = JSON.parse(localStorage.getItem('leadcrm_user') || 'null');
   if (user?.token) {
     config.headers.Authorization = `Bearer ${user.token}`;
   }
@@ -16,7 +16,7 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('growwcode_user');
+      localStorage.removeItem('leadcrm_user');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

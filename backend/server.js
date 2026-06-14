@@ -30,7 +30,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Growwcode CRM API is running' });
+  res.json({ status: 'OK', message: 'LeadCRM API is running' });
 });
 
 app.use(errorHandler);

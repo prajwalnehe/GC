@@ -31,12 +31,12 @@ const Register = () => {
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
             <Code2 className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-secondary-800 dark:text-white">Growwcode CRM</h1>
+          <h1 className="text-2xl font-bold text-secondary-800 dark:text-white">LeadCRM</h1>
         </div>
 
         <div className="card">
           <h2 className="text-2xl font-bold mb-1">Create account</h2>
-          <p className="text-secondary-500 mb-6">Get started with Growwcode CRM</p>
+          <p className="text-secondary-500 mb-6">Get started with LeadCRM</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

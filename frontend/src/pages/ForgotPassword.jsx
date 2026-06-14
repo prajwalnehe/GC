@@ -32,7 +32,7 @@ const ForgotPassword = () => {
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
             <Code2 className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold">Growwcode CRM</h1>
+          <h1 className="text-2xl font-bold">LeadCRM</h1>
         </div>
 
         <div className="card">

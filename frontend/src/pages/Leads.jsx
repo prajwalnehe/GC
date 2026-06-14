@@ -88,7 +88,7 @@ const Leads = () => {
       if (!editingLead) {
         payload.leadName = form.leadName;
         payload.contactPerson = form.leadName;
-        payload.email = `${form.mobileNumber.replace(/\D/g, '')}@growwcode.local`;
+        payload.email = `${form.mobileNumber.replace(/\D/g, '')}@leadcrm.local`;
         payload.status = LEAD_PENDING_STATUS;
       } else {
         payload.status = editingLead.status;

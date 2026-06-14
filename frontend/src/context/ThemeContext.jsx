@@ -6,7 +6,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem('growwcode_theme');
+    const stored = localStorage.getItem('leadcrm_theme');
     if (stored) return stored === 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
@@ -14,10 +14,10 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
-      localStorage.setItem('growwcode_theme', 'dark');
+      localStorage.setItem('leadcrm_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
-      localStorage.setItem('growwcode_theme', 'light');
+      localStorage.setItem('leadcrm_theme', 'light');
     }
   }, [darkMode]);
 

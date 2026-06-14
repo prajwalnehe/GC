@@ -34,7 +34,7 @@ const Login = () => {
               <Code2 className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Growwcode</h1>
+              <h1 className="text-3xl font-bold">LeadCRM</h1>
               <p className="text-white/80">Lead Management CRM</p>
             </div>
           </div>
@@ -51,7 +51,7 @@ const Login = () => {
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <Code2 className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-secondary-800 dark:text-white">Growwcode CRM</h1>
+            <h1 className="text-2xl font-bold text-secondary-800 dark:text-white">LeadCRM</h1>
           </div>
 
           <div className="card">

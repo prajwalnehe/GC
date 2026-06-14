@@ -8,7 +8,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('growwcode_user');
+    const stored = localStorage.getItem('leadcrm_user');
     return stored ? JSON.parse(stored) : null;
   });
   const [loading, setLoading] = useState(true);
@@ -19,10 +19,10 @@ export const AuthProvider = ({ children }) => {
         try {
           const { data } = await authAPI.getMe();
           const updated = { ...user, ...data };
-          localStorage.setItem('growwcode_user', JSON.stringify(updated));
+          localStorage.setItem('leadcrm_user', JSON.stringify(updated));
           setUser(updated);
         } catch {
-          localStorage.removeItem('growwcode_user');
+          localStorage.removeItem('leadcrm_user');
           setUser(null);
         }
       }
@@ -33,26 +33,26 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await authAPI.login({ email, password });
-    localStorage.setItem('growwcode_user', JSON.stringify(data));
+    localStorage.setItem('leadcrm_user', JSON.stringify(data));
     setUser(data);
     return data;
   };
 
   const register = async (formData) => {
     const { data } = await authAPI.register(formData);
-    localStorage.setItem('growwcode_user', JSON.stringify(data));
+    localStorage.setItem('leadcrm_user', JSON.stringify(data));
     setUser(data);
     return data;
   };
 
   const logout = () => {
-    localStorage.removeItem('growwcode_user');
+    localStorage.removeItem('leadcrm_user');
     setUser(null);
   };
 
   const updateUser = (data) => {
     const updated = { ...user, ...data };
-    localStorage.setItem('growwcode_user', JSON.stringify(updated));
+    localStorage.setItem('leadcrm_user', JSON.stringify(updated));
     setUser(updated);
   };
 

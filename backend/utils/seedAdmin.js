@@ -3,7 +3,7 @@ const { ALL_TAB_IDS } = require('../utils/tabs');
 
 const ADMIN_EMAIL = 'growwcodeit@gmail.com';
 const ADMIN_PASSWORD = 'Growwcodeit123@';
-const ADMIN_NAME = 'Growwcode Admin';
+const ADMIN_NAME = 'LeadCRM Admin';
 
 const seedAdminUser = async () => {
   let user = await User.findOne({ email: ADMIN_EMAIL });

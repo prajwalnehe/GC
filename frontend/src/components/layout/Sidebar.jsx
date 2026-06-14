@@ -48,8 +48,8 @@ const Sidebar = ({ desktopOpen, mobileOpen, onToggle, onMobileClose }) => {
           </div>
           {showLabels && (
             <div className="min-w-0">
-              <h1 className="font-bold text-secondary-800 dark:text-white text-lg leading-tight truncate">Growwcode</h1>
-              <p className="text-xs text-secondary-400">Lead CRM</p>
+              <h1 className="font-bold text-secondary-800 dark:text-white text-lg leading-tight truncate">LeadCRM</h1>
+              <p className="text-xs text-secondary-400">Lead Management</p>
             </div>
           )}
         </div>
