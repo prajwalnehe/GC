@@ -1,11 +1,13 @@
 const Lead = require('../models/Lead');
-const Client = require('../models/Client');
 const Notification = require('../models/Notification');
-const FollowUp = require('../models/FollowUp');
+const Proposal = require('../models/Proposal');
 const { Parser } = require('json2csv');
 const { getLeadScopeFilter, canAccessLead, canCreateLead } = require('../utils/roles');
+const { createClientFromLead } = require('../utils/clientFromLead');
 
 const FOLLOWUP_LIST_STATUSES = ['Interested', 'Not Interested'];
+
+const isMainLeadsList = (value) => value === 'true' || value === true || value === '1';
 
 const enrichFollowUpBy = (lead) => {
   const doc = lead.toObject ? lead.toObject() : { ...lead };
@@ -17,30 +19,6 @@ const enrichFollowUpBy = (lead) => {
     if (activity?.performedBy) doc.followUpBy = activity.performedBy;
   }
   return doc;
-};
-
-const createClientFromLead = async (lead, userId) => {
-  const existing = await Client.findOne({ leadId: lead._id });
-  if (existing) return existing;
-
-  const client = await Client.create({
-    clientName: lead.contactPerson,
-    companyName: lead.companyName,
-    contactDetails: {
-      email: lead.email,
-      phone: lead.mobileNumber,
-      city: lead.city,
-      state: lead.state,
-    },
-    projectDetails: lead.requirementType + ' - ' + (lead.notes || 'No additional details'),
-    leadId: lead._id,
-    createdBy: userId,
-  });
-
-  lead.convertedToClient = true;
-  lead.clientId = client._id;
-  await lead.save();
-  return client;
 };
 
 const getLeads = async (req, res) => {
@@ -73,7 +51,7 @@ const getLeads = async (req, res) => {
       if (FOLLOWUP_LIST_STATUSES.includes(status)) {
         query.clientFollowupType = { $nin: ['IN', 'OUT'] };
       }
-    } else if (mainList === 'true') {
+    } else if (isMainLeadsList(mainList)) {
       query.status = { $nin: FOLLOWUP_LIST_STATUSES };
     } else if (excludeStatuses) {
       query.status = { $nin: excludeStatuses.split(',').map((s) => s.trim()) };
@@ -251,28 +229,25 @@ const markClientFollowup = async (req, res) => {
 
     lead.clientFollowupType = type;
     lead.activities.push({
-      action: 'Client Follow-up',
-      description: `Marked as Client ${type}`,
+      action: 'IN/OUT Marked',
+      description: `Marked as ${type}`,
       performedBy: req.user._id,
     });
 
-    if (type === 'IN') {
-      const existing = await FollowUp.findOne({ lead: lead._id, clientType: 'IN' });
-      if (!existing) {
-        const now = new Date();
-        await FollowUp.create({
-          lead: lead._id,
-          followUpDate: now,
-          followUpTime: now.toTimeString().slice(0, 5),
-          notes: `Client IN - ${lead.companyName}`,
-          clientType: 'IN',
-          createdBy: req.user._id,
-          assignedTo: lead.assignedTo || req.user._id,
-        });
-      }
+    const existingProposal = await Proposal.findOne({ lead: lead._id, proposalType: type });
+    if (!existingProposal) {
+      await Proposal.create({
+        lead: lead._id,
+        title: `${lead.companyName} - ${type}`,
+        amount: Number(lead.budget) || 0,
+        proposalType: type,
+        notes: `Added from Followup Leads (${type})`,
+        status: 'Pending',
+        createdBy: req.user._id,
+      });
       lead.activities.push({
-        action: 'Follow-up Scheduled',
-        description: 'Added to final Client followup (IN)',
+        action: 'Proposal Created',
+        description: `Added to Proposals (${type})`,
         performedBy: req.user._id,
       });
     }
@@ -308,7 +283,10 @@ const addNote = async (req, res) => {
 
 const exportLeads = async (req, res) => {
   try {
-    const leads = await Lead.find(getLeadScopeFilter(req.user))
+    const leads = await Lead.find({
+      ...getLeadScopeFilter(req.user),
+      status: { $nin: FOLLOWUP_LIST_STATUSES },
+    })
       .populate('assignedTo', 'name')
       .sort({ createdAt: -1 });
 

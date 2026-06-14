@@ -5,6 +5,7 @@ const path = require('path');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const { seedAdminUser } = require('./utils/seedAdmin');
+const Proposal = require('./models/Proposal');
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ const PORT = process.env.PORT || 5500;
 const startServer = async () => {
   await connectDB();
   await seedAdminUser();
+  await Proposal.updateMany({ status: 'Draft' }, { $set: { status: 'Pending' } });
   const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });

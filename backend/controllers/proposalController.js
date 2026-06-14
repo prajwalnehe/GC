@@ -1,5 +1,20 @@
 const Proposal = require('../models/Proposal');
 const Lead = require('../models/Lead');
+const { createClientFromLead } = require('../utils/clientFromLead');
+
+const handleApprovedProposal = async (lead, userId) => {
+  if (!lead || lead.convertedToClient) return null;
+
+  await createClientFromLead(lead, userId);
+  lead.status = 'Won';
+  lead.activities.push({
+    action: 'Client Created',
+    description: 'Client created from approved proposal',
+    performedBy: userId,
+  });
+  await lead.save();
+  return true;
+};
 
 const getProposals = async (req, res) => {
   try {
@@ -54,7 +69,8 @@ const createProposal = async (req, res) => {
         performedBy: req.user._id,
       });
       if (proposal.status === 'Sent') lead.status = 'Proposal Sent';
-      await lead.save();
+      if (proposal.status === 'Approved') await handleApprovedProposal(lead, req.user._id);
+      else await lead.save();
     }
 
     const populated = await Proposal.findById(proposal._id)
@@ -71,6 +87,8 @@ const updateProposal = async (req, res) => {
     const proposal = await Proposal.findById(req.params.id);
     if (!proposal) return res.status(404).json({ message: 'Proposal not found' });
 
+    const oldStatus = proposal.status;
+
     Object.keys(req.body).forEach((key) => {
       if (req.body[key] !== undefined) proposal[key] = req.body[key];
     });
@@ -78,13 +96,24 @@ const updateProposal = async (req, res) => {
       proposal.pdfFile = req.file.filename;
       proposal.pdfOriginalName = req.file.originalname;
     }
-    await proposal.save();
 
-    if (req.body.status === 'Sent') {
+    if (req.body.proposalType && ['IN', 'OUT'].includes(req.body.proposalType)) {
       const lead = await Lead.findById(proposal.lead);
       if (lead) {
+        lead.clientFollowupType = req.body.proposalType;
+        await lead.save();
+      }
+    }
+
+    await proposal.save();
+
+    const lead = await Lead.findById(proposal.lead);
+    if (lead) {
+      if (req.body.status === 'Sent') {
         lead.status = 'Proposal Sent';
         await lead.save();
+      } else if (req.body.status === 'Approved' && oldStatus !== 'Approved') {
+        await handleApprovedProposal(lead, req.user._id);
       }
     }
 
