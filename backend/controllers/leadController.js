@@ -2,6 +2,9 @@ const Lead = require('../models/Lead');
 const Client = require('../models/Client');
 const Notification = require('../models/Notification');
 const { Parser } = require('json2csv');
+const { getLeadScopeFilter, canAccessLead, canCreateLead } = require('../utils/roles');
+
+const FOLLOWUP_LIST_STATUSES = ['Interested', 'Not Interested'];
 
 const createClientFromLead = async (lead, userId) => {
   const existing = await Client.findOne({ leadId: lead._id });
@@ -33,6 +36,8 @@ const getLeads = async (req, res) => {
       search,
       status,
       excludeStatus,
+      excludeStatuses,
+      mainList,
       leadSource,
       sortBy = 'createdAt',
       sortOrder = 'desc',
@@ -40,7 +45,7 @@ const getLeads = async (req, res) => {
       limit = 10,
     } = req.query;
 
-    const query = {};
+    const query = { ...getLeadScopeFilter(req.user) };
     if (search) {
       query.$or = [
         { leadName: { $regex: search, $options: 'i' } },
@@ -50,8 +55,15 @@ const getLeads = async (req, res) => {
         { mobileNumber: { $regex: search, $options: 'i' } },
       ];
     }
-    if (status) query.status = status;
-    if (excludeStatus) query.status = { $ne: excludeStatus };
+    if (status) {
+      query.status = status;
+    } else if (mainList === 'true') {
+      query.status = { $nin: FOLLOWUP_LIST_STATUSES };
+    } else if (excludeStatuses) {
+      query.status = { $nin: excludeStatuses.split(',').map((s) => s.trim()) };
+    } else if (excludeStatus) {
+      query.status = { $ne: excludeStatus };
+    }
     if (leadSource) query.leadSource = leadSource;
 
     const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
@@ -87,6 +99,7 @@ const getLeadById = async (req, res) => {
       .populate('activities.performedBy', 'name')
       .populate('notesHistory.createdBy', 'name');
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    if (!canAccessLead(req.user, lead)) return res.status(403).json({ message: 'Not authorized to view this lead' });
     res.json(lead);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -95,6 +108,9 @@ const getLeadById = async (req, res) => {
 
 const createLead = async (req, res) => {
   try {
+    if (!canCreateLead(req.user)) {
+      return res.status(403).json({ message: 'Lead Manager cannot create leads' });
+    }
     const leadData = { ...req.body, createdBy: req.user._id };
     if (!leadData.assignedTo) leadData.assignedTo = req.user._id;
 
@@ -131,6 +147,7 @@ const updateLead = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    if (!canAccessLead(req.user, lead)) return res.status(403).json({ message: 'Not authorized to update this lead' });
 
     const oldStatus = lead.status;
     const oldAssigned = lead.assignedTo?.toString();
@@ -181,6 +198,7 @@ const deleteLead = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    if (!canAccessLead(req.user, lead)) return res.status(403).json({ message: 'Not authorized to delete this lead' });
     await lead.deleteOne();
     res.json({ message: 'Lead removed' });
   } catch (error) {
@@ -192,6 +210,7 @@ const addNote = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    if (!canAccessLead(req.user, lead)) return res.status(403).json({ message: 'Not authorized to add notes to this lead' });
     lead.notesHistory.push({ content: req.body.content, createdBy: req.user._id });
     lead.activities.push({
       action: 'Note Added',
@@ -208,7 +227,7 @@ const addNote = async (req, res) => {
 
 const exportLeads = async (req, res) => {
   try {
-    const leads = await Lead.find()
+    const leads = await Lead.find(getLeadScopeFilter(req.user))
       .populate('assignedTo', 'name')
       .sort({ createdAt: -1 });
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import { ALL_TAB_IDS, NAV_TABS } from '../utils/navTabs';
 
 const AuthContext = createContext();
 
@@ -17,7 +18,9 @@ export const AuthProvider = ({ children }) => {
       if (user?.token) {
         try {
           const { data } = await authAPI.getMe();
-          setUser((prev) => ({ ...prev, ...data }));
+          const updated = { ...user, ...data };
+          localStorage.setItem('growwcode_user', JSON.stringify(updated));
+          setUser(updated);
         } catch {
           localStorage.removeItem('growwcode_user');
           setUser(null);
@@ -54,9 +57,32 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = user?.role === 'Admin';
+  const isLeadManager = user?.role === 'Lead Manager';
+  const canViewAllLeads = isAdmin || isLeadManager;
+
+  const getAllowedTabs = () => {
+    if (isAdmin) return ALL_TAB_IDS;
+    return user?.allowedTabs || [];
+  };
+
+  const hasTabAccess = (tabId) => {
+    if (isAdmin) return true;
+    if (tabId === 'users') return false;
+    return (user?.allowedTabs || []).includes(tabId);
+  };
+
+  const getHomePath = () => {
+    if (isAdmin) return '/dashboard';
+    const allowed = user?.allowedTabs || [];
+    const tab = NAV_TABS.find((t) => allowed.includes(t.id) && !t.adminOnly);
+    return tab?.path || '/dashboard';
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, isAdmin }}>
+    <AuthContext.Provider value={{
+      user, loading, login, register, logout, updateUser, isAdmin, isLeadManager, canViewAllLeads, hasTabAccess, getAllowedTabs, getHomePath,
+    }}
+    >
       {children}
     </AuthContext.Provider>
   );

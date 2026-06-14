@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Edit, Eye, ArrowUpDown, UserCheck } from 'lucide-react';
 import { leadsAPI, usersAPI } from '../services/api';
-import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, formatDate } from '../utils/helpers';
+import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
@@ -16,6 +16,7 @@ const FollowupLeads = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [interestFilter, setInterestFilter] = useState(FOLLOWUP_LEAD_STATUS);
   const [sourceFilter, setSourceFilter] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -32,7 +33,7 @@ const FollowupLeads = () => {
     try {
       const { data } = await leadsAPI.getAll({
         search,
-        status: FOLLOWUP_LEAD_STATUS,
+        status: interestFilter,
         leadSource: sourceFilter,
         sortBy,
         sortOrder,
@@ -48,7 +49,7 @@ const FollowupLeads = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchLeads(); }, [search, sourceFilter, sortBy, sortOrder, page]);
+  useEffect(() => { fetchLeads(); }, [search, interestFilter, sourceFilter, sortBy, sortOrder, page]);
 
   useEffect(() => {
     usersAPI.getAll().then(({ data }) => setUsers(data)).catch(() => {});
@@ -83,22 +84,41 @@ const FollowupLeads = () => {
     }
   };
 
+  const isInterestedView = interestFilter === FOLLOWUP_LEAD_STATUS;
+
   return (
     <div>
       <PageHeader
         title="Followup Leads"
-        subtitle={`${total} interested leads`}
+        subtitle={`${total} ${isInterestedView ? 'interested' : 'not interested'} leads`}
       />
 
-      <div className="card mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
-        <p className="text-sm text-emerald-800 dark:text-emerald-200">
-          Leads with status <strong>Interested</strong> appear here. Edit a lead from the Leads page and set status to Interested to add them.
+      <div className={`card mb-6 p-4 border ${
+        isInterestedView
+          ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800'
+          : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'
+      }`}
+      >
+        <p className={`text-sm ${isInterestedView ? 'text-emerald-800 dark:text-emerald-200' : 'text-red-800 dark:text-red-200'}`}>
+          {isInterestedView ? (
+            <>Leads marked as <strong>Interested</strong> from the Leads page appear here.</>
+          ) : (
+            <>Leads marked as <strong>Not Interested</strong> from the Leads page appear here.</>
+          )}
         </p>
       </div>
 
       <div className="card mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search interested leads..." />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <select
+            value={interestFilter}
+            onChange={(e) => { setInterestFilter(e.target.value); setPage(1); }}
+            className="input-field"
+          >
+            <option value={FOLLOWUP_LEAD_STATUS}>Interested</option>
+            <option value={NOT_INTERESTED_STATUS}>Not Interested</option>
+          </select>
+          <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
           <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field">
             <option value="">All Sources</option>
             {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -117,8 +137,10 @@ const FollowupLeads = () => {
         ) : leads.length === 0 ? (
           <EmptyState
             icon={UserCheck}
-            title="No interested leads"
-            description="Mark leads as Interested from the Leads page to see them here"
+            title={isInterestedView ? 'No interested leads' : 'No not interested leads'}
+            description={isInterestedView
+              ? 'Mark leads as Interested from the Leads page to see them here'
+              : 'Mark leads as Not Interested from the Leads page to see them here'}
             action={<Link to="/leads" className="btn-primary">Go to Leads</Link>}
           />
         ) : (

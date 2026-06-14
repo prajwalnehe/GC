@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: 'growwcodeit@gmail.com', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -69,7 +69,7 @@ const Login = () => {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="input-field pl-10"
-                    placeholder="growwcodeit@gmail.com"
+                    placeholder="Enter your email"
                   />
                 </div>
               </div>

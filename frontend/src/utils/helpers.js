@@ -79,7 +79,7 @@ export const DOCUMENT_TYPES = [
   'Other',
 ];
 
-export const ROLES = ['Admin', 'Sales Executive'];
+export const ROLES = ['Admin', 'Sales Executive', 'Lead Manager'];
 
 export const getStatusColor = (status) => {
   const colors = {

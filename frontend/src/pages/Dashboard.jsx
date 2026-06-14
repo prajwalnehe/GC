@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { dashboardAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import DashboardStats from '../components/dashboard/DashboardStats';
+import PersonalDashboardStats from '../components/dashboard/PersonalDashboardStats';
 import { MonthlyLeadsChart, LeadSourceChart, ConversionRateChart } from '../components/dashboard/DashboardCharts';
 import { CardSkeleton } from '../components/common/Skeleton';
 import StatusBadge from '../components/common/StatusBadge';
 import { formatDate, formatCurrency } from '../utils/helpers';
 import { PageHeader } from '../components/common/PageElements';
-import { TrendingUp, Users, CreditCard } from 'lucide-react';
+import { TrendingUp, Users, CreditCard, UserCircle } from 'lucide-react';
 
 const Dashboard = () => {
+  const { isAdmin, user } = useAuth();
   const [stats, setStats] = useState(null);
   const [monthlyData, setMonthlyData] = useState([]);
   const [sourceData, setSourceData] = useState([]);
@@ -20,31 +23,49 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, monthlyRes, sourceRes, conversionRes, recentRes] = await Promise.all([
-          dashboardAPI.getStats(),
-          dashboardAPI.getMonthlyLeads(),
-          dashboardAPI.getLeadSources(),
-          dashboardAPI.getConversionRate(),
-          dashboardAPI.getRecentLeads(),
-        ]);
+        const statsRes = await dashboardAPI.getStats();
         setStats(statsRes.data);
-        setMonthlyData(monthlyRes.data);
-        setSourceData(sourceRes.data);
-        setConversionData(conversionRes.data);
-        setRecentLeads(recentRes.data);
+
+        if (isAdmin) {
+          const [monthlyRes, sourceRes, conversionRes, recentRes] = await Promise.all([
+            dashboardAPI.getMonthlyLeads(),
+            dashboardAPI.getLeadSources(),
+            dashboardAPI.getConversionRate(),
+            dashboardAPI.getRecentLeads(),
+          ]);
+          setMonthlyData(monthlyRes.data);
+          setSourceData(sourceRes.data);
+          setConversionData(conversionRes.data);
+          setRecentLeads(recentRes.data);
+        }
       } catch {}
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [isAdmin]);
 
   if (loading) {
     return (
       <div>
-        <PageHeader title="Dashboard" subtitle="Overview of your CRM performance" />
+        <PageHeader title="Dashboard" subtitle={isAdmin ? 'Overview of your CRM performance' : `Welcome, ${user?.name || 'User'}`} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)}
+          {Array.from({ length: isAdmin ? 8 : user?.role === 'Lead Manager' ? 5 : 3 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
+      </div>
+    );
+  }
+
+  const isLeadManager = user?.role === 'Lead Manager';
+
+  if (!isAdmin) {
+    return (
+      <div>
+        <PageHeader
+          title="Dashboard"
+          subtitle={`Welcome ${user?.name || ''} — ${isLeadManager ? 'your leads overview' : 'your assigned leads overview'}`}
+        />
+
+        <PersonalDashboardStats stats={stats} isLeadManager={isLeadManager} />
       </div>
     );
   }
@@ -55,7 +76,7 @@ const Dashboard = () => {
 
       <DashboardStats stats={stats} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+      <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-4">
         <div className="card flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
             <TrendingUp className="w-6 h-6 text-primary" />
@@ -63,6 +84,15 @@ const Dashboard = () => {
           <div>
             <p className="text-sm text-secondary-500">Conversion Rate</p>
             <p className="text-2xl font-bold">{stats?.conversionRate || 0}%</p>
+          </div>
+        </div>
+        <div className="card flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center">
+            <UserCircle className="w-6 h-6 text-violet-500" />
+          </div>
+          <div>
+            <p className="text-sm text-secondary-500">Total Employees</p>
+            <p className="text-2xl font-bold">{stats?.totalEmployees ?? 0}</p>
           </div>
         </div>
         <div className="card flex items-center gap-4">

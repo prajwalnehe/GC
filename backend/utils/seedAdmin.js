@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { ALL_TAB_IDS } = require('../utils/tabs');
 
 const ADMIN_EMAIL = 'growwcodeit@gmail.com';
 const ADMIN_PASSWORD = 'Growwcodeit123@';
@@ -12,6 +13,7 @@ const seedAdminUser = async () => {
     user.password = ADMIN_PASSWORD;
     user.role = 'Admin';
     user.isActive = true;
+    user.allowedTabs = ALL_TAB_IDS;
     await user.save();
     console.log('Admin user credentials synced');
   } else {
@@ -20,6 +22,7 @@ const seedAdminUser = async () => {
       email: ADMIN_EMAIL,
       password: ADMIN_PASSWORD,
       role: 'Admin',
+      allowedTabs: ALL_TAB_IDS,
     });
     console.log('Admin user created');
   }

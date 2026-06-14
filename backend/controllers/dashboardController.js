@@ -2,12 +2,23 @@ const Lead = require('../models/Lead');
 const Client = require('../models/Client');
 const Payment = require('../models/Payment');
 const FollowUp = require('../models/FollowUp');
+const User = require('../models/User');
+const { getLeadScopeFilter, getFollowUpScopeFilter } = require('../utils/roles');
 
 const getDashboardStats = async (req, res) => {
   try {
+    const leadFilter = getLeadScopeFilter(req.user);
+    const followUpFilter = getFollowUpScopeFilter(req.user);
+    const isAdmin = req.user?.role === 'Admin';
+    const isLeadManager = req.user?.role === 'Lead Manager';
+    const personal = !isAdmin;
+
     const [
       totalLeads,
+      pendingLeads,
       newLeads,
+      interestedLeads,
+      notInterestedLeads,
       contactedLeads,
       followUpLeads,
       proposalSent,
@@ -15,15 +26,18 @@ const getDashboardStats = async (req, res) => {
       lostLeads,
       revenueData,
     ] = await Promise.all([
-      Lead.countDocuments(),
-      Lead.countDocuments({ status: 'New Lead' }),
-      Lead.countDocuments({ status: 'Contacted' }),
-      Lead.countDocuments({ status: 'Follow-up Required' }),
-      Lead.countDocuments({ status: 'Proposal Sent' }),
-      Lead.countDocuments({ status: 'Won' }),
-      Lead.countDocuments({ status: 'Lost' }),
+      Lead.countDocuments(leadFilter),
+      Lead.countDocuments({ ...leadFilter, status: { $nin: ['Interested', 'Not Interested'] } }),
+      Lead.countDocuments({ ...leadFilter, status: 'New Lead' }),
+      Lead.countDocuments({ ...leadFilter, status: 'Interested' }),
+      Lead.countDocuments({ ...leadFilter, status: 'Not Interested' }),
+      Lead.countDocuments({ ...leadFilter, status: 'Contacted' }),
+      Lead.countDocuments({ ...leadFilter, status: 'Follow-up Required' }),
+      Lead.countDocuments({ ...leadFilter, status: 'Proposal Sent' }),
+      Lead.countDocuments({ ...leadFilter, status: 'Won' }),
+      Lead.countDocuments({ ...leadFilter, status: 'Lost' }),
       Lead.aggregate([
-        { $match: { status: 'Won' } },
+        { $match: { ...leadFilter, status: 'Won' } },
         { $group: { _id: null, total: { $sum: '$revenue' } } },
       ]),
     ]);
@@ -36,6 +50,10 @@ const getDashboardStats = async (req, res) => {
     res.json({
       totalLeads,
       newLeads,
+      pendingLeads,
+      interestedLeads,
+      notInterestedLeads,
+      followUpsTaken: interestedLeads + notInterestedLeads,
       contactedLeads,
       followUpLeads,
       proposalSent,
@@ -43,12 +61,18 @@ const getDashboardStats = async (req, res) => {
       lostLeads,
       revenue,
       conversionRate,
-      totalClients: await Client.countDocuments(),
-      pendingPayments: await Payment.countDocuments({ status: { $in: ['Pending', 'Partial Paid'] } }),
+      personal,
+      isLeadManager,
+      totalClients: personal ? 0 : await Client.countDocuments(),
+      pendingPayments: personal ? 0 : await Payment.countDocuments({ status: { $in: ['Pending', 'Partial Paid'] } }),
       upcomingFollowUps: await FollowUp.countDocuments({
+        ...followUpFilter,
         reminderStatus: 'Pending',
         followUpDate: { $gte: new Date() },
       }),
+      totalEmployees: isAdmin
+        ? await User.countDocuments({ role: { $ne: 'Admin' }, isActive: true })
+        : undefined,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -57,12 +81,13 @@ const getDashboardStats = async (req, res) => {
 
 const getMonthlyLeads = async (req, res) => {
   try {
+    const leadFilter = getLeadScopeFilter(req.user);
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
 
     const data = await Lead.aggregate([
-      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      { $match: { ...leadFilter, createdAt: { $gte: sixMonthsAgo } } },
       {
         $group: {
           _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
@@ -88,7 +113,9 @@ const getMonthlyLeads = async (req, res) => {
 
 const getLeadSourceDistribution = async (req, res) => {
   try {
+    const leadFilter = getLeadScopeFilter(req.user);
     const data = await Lead.aggregate([
+      { $match: leadFilter },
       { $group: { _id: '$leadSource', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]);
@@ -100,11 +127,12 @@ const getLeadSourceDistribution = async (req, res) => {
 
 const getConversionRate = async (req, res) => {
   try {
+    const leadFilter = getLeadScopeFilter(req.user);
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
 
     const data = await Lead.aggregate([
-      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      { $match: { ...leadFilter, createdAt: { $gte: sixMonthsAgo } } },
       {
         $group: {
           _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
@@ -129,7 +157,7 @@ const getConversionRate = async (req, res) => {
 
 const getRecentLeads = async (req, res) => {
   try {
-    const leads = await Lead.find()
+    const leads = await Lead.find(getLeadScopeFilter(req.user))
       .populate('assignedTo', 'name')
       .sort({ createdAt: -1 })
       .limit(5);

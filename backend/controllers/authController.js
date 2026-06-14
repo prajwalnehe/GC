@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const crypto = require('crypto');
-const { ADMIN_EMAIL } = require('../utils/seedAdmin');
 
 const registerUser = async (req, res) => {
   res.status(403).json({ message: 'Registration is disabled' });
@@ -10,12 +9,7 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    const user = await User.findOne({ email: ADMIN_EMAIL });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (user && (await user.matchPassword(password))) {
       if (!user.isActive) {
         return res.status(403).json({ message: 'Account is deactivated' });
@@ -26,6 +20,7 @@ const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
+        allowedTabs: user.allowedTabs,
         token: generateToken(user._id),
       });
     } else {

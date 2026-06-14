@@ -5,25 +5,29 @@ import {
   FileText, Calendar, Building2, Settings, ChevronLeft, ChevronRight, Code2, UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { NAV_TABS } from '../../utils/navTabs';
 
-const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/leads', label: 'Leads', icon: Users },
-  { path: '/followup-leads', label: 'Followup Leads', icon: UserCheck },
-  { path: '/follow-ups', label: 'Follow-ups', icon: Calendar },
-  { path: '/proposals', label: 'Proposals', icon: FileText },
-  { path: '/clients', label: 'Clients', icon: Building2 },
-  { path: '/projects', label: 'Projects', icon: FolderKanban },
-  { path: '/payments', label: 'Payments', icon: CreditCard },
-  { path: '/users', label: 'Users', icon: UserCircle, adminOnly: true },
-  { path: '/settings', label: 'Settings', icon: Settings },
-];
+const iconMap = {
+  dashboard: LayoutDashboard,
+  leads: Users,
+  'followup-leads': UserCheck,
+  'follow-ups': Calendar,
+  proposals: FileText,
+  clients: Building2,
+  projects: FolderKanban,
+  payments: CreditCard,
+  users: UserCircle,
+  settings: Settings,
+};
 
 const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, hasTabAccess } = useAuth();
 
-  const filteredItems = navItems.filter((item) => !item.adminOnly || isAdmin);
+  const filteredItems = NAV_TABS.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    return hasTabAccess(item.id);
+  });
 
   return (
     <>
@@ -49,7 +53,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
         <nav className="p-3 space-y-1 mt-2">
           {filteredItems.map((item) => {
-            const Icon = item.icon;
+            const Icon = iconMap[item.id] || LayoutDashboard;
             const isActive = location.pathname === item.path
               || (item.path !== '/leads' && location.pathname.startsWith(item.path + '/'))
               || (item.path === '/leads' && (location.pathname === '/leads' || /^\/leads\/[^/]+$/.test(location.pathname)));

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
 import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate } from '../utils/helpers';
 import Modal from '../components/common/Modal';
@@ -13,6 +14,8 @@ import { PageHeader, SearchBar, Pagination } from '../components/common/PageElem
 import { Users } from 'lucide-react';
 
 const Leads = () => {
+  const { canViewAllLeads, isLeadManager, user } = useAuth();
+  const canAddLead = !isLeadManager;
   const [leads, setLeads] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +37,7 @@ const Leads = () => {
     try {
       const params = {
         search, leadSource: sourceFilter, sortBy, sortOrder, page, limit: 10,
-        excludeStatus: FOLLOWUP_LEAD_STATUS,
+        mainList: true,
       };
       const { data } = await leadsAPI.getAll(params);
       setLeads(data.leads);
@@ -54,7 +57,13 @@ const Leads = () => {
 
   const handleCreate = () => {
     setEditingLead(null);
-    setForm({ status: 'New Lead', leadSource: 'Website', requirementType: 'Web Development', businessType: 'Other' });
+    setForm({
+      status: 'New Lead',
+      leadSource: 'Website',
+      requirementType: 'Web Development',
+      businessType: 'Other',
+      leadName: user?.name || '',
+    });
     setShowModal(true);
   };
 
@@ -98,10 +107,12 @@ const Leads = () => {
     setUpdatingInterest(lead._id);
     try {
       await leadsAPI.update(lead._id, { status: newStatus });
-      toast.success(interested ? 'Lead moved to Followup Leads' : 'Marked as Not Interested');
-      fetchLeads();
+      setLeads((prev) => prev.filter((l) => l._id !== lead._id));
+      setTotal((prev) => Math.max(0, prev - 1));
+      toast.success(interested ? 'Lead moved to Followup Leads' : 'Moved to Followup Leads (Not Interested)');
     } catch {
       toast.error('Failed to update interest');
+      fetchLeads();
     }
     setUpdatingInterest(null);
   };
@@ -150,9 +161,11 @@ const Leads = () => {
             <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
               <Download className="w-4 h-4" /> Export
             </button>
-            <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
-              <Plus className="w-4 h-4" /> Add Lead
-            </button>
+            {canAddLead && (
+              <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
+                <Plus className="w-4 h-4" /> Add Lead
+              </button>
+            )}
           </div>
         }
       />
@@ -176,7 +189,12 @@ const Leads = () => {
         {loading ? (
           <TableSkeleton />
         ) : leads.length === 0 ? (
-          <EmptyState icon={Users} title="No leads found" description="Create your first lead to get started" action={<button onClick={handleCreate} className="btn-primary">Add Lead</button>} />
+          <EmptyState
+            icon={Users}
+            title="No leads found"
+            description={canAddLead ? 'Create your first lead to get started' : 'No leads available'}
+            action={canAddLead ? <button onClick={handleCreate} className="btn-primary">Add Lead</button> : undefined}
+          />
         ) : (
           <>
             <table className="w-full text-sm">
@@ -193,7 +211,9 @@ const Leads = () => {
                       <span className="flex items-center gap-1">{col.label} <ArrowUpDown className="w-3 h-3" /></span>
                     </th>
                   ))}
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Interest</th>
+                  {canViewAllLeads && (
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500">Interest</th>
+                  )}
                   <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
                 </tr>
               </thead>
@@ -204,39 +224,41 @@ const Leads = () => {
                     <td className="py-3 px-2">{lead.companyName}</td>
                     <td className="py-3 px-2 text-secondary-500">{lead.mobileNumber}</td>
                     <td className="py-3 px-2">
-                      <StatusBadge status={lead.status === NOT_INTERESTED_STATUS ? NOT_INTERESTED_STATUS : 'New Lead'} />
+                      <StatusBadge status={lead.status} />
                     </td>
                     <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
-                    <td className="py-3 px-2">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleInterest(lead, true)}
-                          disabled={updatingInterest === lead._id}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                            lead.status === FOLLOWUP_LEAD_STATUS
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300'
-                          }`}
-                        >
-                          <ThumbsUp className="w-3.5 h-3.5" />
-                          Interested
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleInterest(lead, false)}
-                          disabled={updatingInterest === lead._id}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                            lead.status === NOT_INTERESTED_STATUS
-                              ? 'bg-red-500 text-white'
-                              : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300'
-                          }`}
-                        >
-                          <ThumbsDown className="w-3.5 h-3.5" />
-                          Not Interested
-                        </button>
-                      </div>
-                    </td>
+                    {canViewAllLeads && (
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleInterest(lead, true)}
+                            disabled={updatingInterest === lead._id}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              lead.status === FOLLOWUP_LEAD_STATUS
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300'
+                            }`}
+                          >
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                            Interested
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInterest(lead, false)}
+                            disabled={updatingInterest === lead._id}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              lead.status === NOT_INTERESTED_STATUS
+                                ? 'bg-red-500 text-white'
+                                : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300'
+                            }`}
+                          >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                            Not Interested
+                          </button>
+                        </div>
+                      </td>
+                    )}
                     <td className="py-3 px-2">
                       <div className="flex items-center justify-end gap-1">
                         <Link to={`/leads/${lead._id}`} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Eye className="w-4 h-4" /></Link>
