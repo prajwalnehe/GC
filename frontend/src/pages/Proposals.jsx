@@ -84,39 +84,40 @@ const Proposals = () => {
   return (
     <div>
       <PageHeader title="Proposals" subtitle="Manage client proposals" action={
-        <button onClick={() => { setEditing(null); setForm({ title: '', amount: '', lead: '', status: 'Pending', proposalType: 'IN', notes: '' }); setPdfFile(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => { setEditing(null); setForm({ title: '', amount: '', lead: '', status: 'Pending', proposalType: 'IN', notes: '' }); setPdfFile(null); setShowModal(true); }} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Add Proposal
         </button>
       } />
 
-      <div className="card overflow-x-auto overflow-y-visible">
+      <div className="card overflow-y-visible">
         {loading ? <TableSkeleton cols={7} /> : proposals.length === 0 ? (
           <EmptyState icon={FileText} title="No proposals" description="Create your first proposal" />
         ) : (
           <>
-            <table className="w-full text-sm">
+            <div className="w-full overflow-x-auto lg:overflow-visible">
+            <table className="w-full text-sm min-w-[700px] lg:min-w-0">
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Title</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Lead</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Type</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Amount</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Date</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Status</th>
-                  <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Title</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Lead</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Type</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Amount</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Date</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Status</th>
+                  <th className="text-right py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {proposals.map((p) => (
                   <tr key={p._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                    <td className="py-3 px-2 font-medium">{p.title}</td>
-                    <td className="py-3 px-2">{displayValue(p.lead?.leadName)}</td>
-                    <td className="py-3 px-2">
+                    <td className="py-3 px-2 font-medium max-w-[140px] lg:max-w-[180px] truncate">{p.title}</td>
+                    <td className="py-3 px-2 max-w-[100px] lg:max-w-[120px] truncate">{displayValue(p.lead?.leadName)}</td>
+                    <td className="py-3 px-2 whitespace-nowrap">
                       <select
                         value={p.proposalType || 'IN'}
                         disabled={updating === `${p._id}-proposalType`}
                         onChange={(e) => handleFieldUpdate(p, 'proposalType', e.target.value)}
-                        className={`input-field py-1.5 px-2 text-xs min-w-[72px] font-medium ${
+                        className={`input-field py-1.5 px-2 text-xs w-[72px] font-medium ${
                           (p.proposalType || 'IN') === 'IN'
                             ? 'text-emerald-700 dark:text-emerald-300'
                             : 'text-red-700 dark:text-red-300'
@@ -125,9 +126,9 @@ const Proposals = () => {
                         {PROPOSAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                       </select>
                     </td>
-                    <td className="py-3 px-2">{formatCurrency(p.amount)}</td>
-                    <td className="py-3 px-2 text-secondary-500">{formatDate(p.proposalDate)}</td>
-                    <td className="py-3 px-2 overflow-visible">
+                    <td className="py-3 px-2 whitespace-nowrap">{formatCurrency(p.amount)}</td>
+                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{formatDate(p.proposalDate)}</td>
+                    <td className="py-3 px-2 overflow-visible whitespace-nowrap">
                       <ProposalStatusSelect
                         value={p.status}
                         disabled={updating === `${p._id}-status`}
@@ -135,7 +136,7 @@ const Proposals = () => {
                       />
                     </td>
                     <td className="py-3 px-2">
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end gap-1 whitespace-nowrap">
                         {p.pdfFile && <a href={`/uploads/${p.pdfFile}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-secondary-100"><Download className="w-4 h-4" /></a>}
                         <button onClick={() => { setEditing(p); setForm({ title: p.title, amount: p.amount, lead: p.lead?._id || p.lead, status: p.status, proposalType: p.proposalType || 'IN', notes: p.notes }); setShowModal(true); }} className="p-1.5 rounded hover:bg-secondary-100"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(p._id)} className="p-1.5 rounded hover:bg-red-50 text-red-500"><Trash2 className="w-4 h-4" /></button>
@@ -145,6 +146,7 @@ const Proposals = () => {
                 ))}
               </tbody>
             </table>
+            </div>
             <Pagination page={page} pages={pages} total={total} onPageChange={setPage} />
           </>
         )}
@@ -159,7 +161,7 @@ const Proposals = () => {
               {leads.map((l) => <option key={l._id} value={l._id}>{l.leadName}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label className="block text-sm font-medium mb-1.5">Amount (₹)</label><input type="number" required value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input-field" /></div>
             <div><label className="block text-sm font-medium mb-1.5">Type</label>
               <select value={form.proposalType} onChange={(e) => setForm({ ...form, proposalType: e.target.value })} className="input-field">

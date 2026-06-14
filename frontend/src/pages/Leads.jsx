@@ -10,7 +10,7 @@ import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { SearchBar, Pagination } from '../components/common/PageElements';
+import { SearchBar, Pagination, PageHeader, TableWrapper } from '../components/common/PageElements';
 import { Users } from 'lucide-react';
 
 const Leads = () => {
@@ -160,36 +160,39 @@ const Leads = () => {
 
   return (
     <div>
-      <div className="mb-6 flex flex-row flex-nowrap items-center gap-3 overflow-x-auto">
-        <h1 className="text-2xl font-bold text-secondary-800 dark:text-secondary-100 shrink-0 whitespace-nowrap">
-          Leads
-        </h1>
-        <div className="flex-[2] min-w-[180px]">
-          <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
-        </div>
-        <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field min-w-[140px] flex-1">
-          <option value="">All Sources</option>
-          {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1); }} className="input-field min-w-[120px] flex-1">
-          {LEAD_DATE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
-        </select>
-        <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field min-w-[140px] flex-1">
-          <option value="createdAt-desc">Newest First</option>
-          <option value="createdAt-asc">Oldest First</option>
-          <option value="leadName-asc">Emp Name A-Z</option>
-        </select>
-        <button onClick={handleExport} className="btn-secondary flex items-center gap-2 shrink-0 whitespace-nowrap">
-          <Download className="w-4 h-4" /> Export
-        </button>
-        {canAddLead && (
-          <button onClick={handleCreate} className="btn-primary flex items-center gap-2 shrink-0 whitespace-nowrap">
-            <Plus className="w-4 h-4" /> Add Lead
+      <PageHeader title="Leads" />
+
+      <div className="card mb-4 sm:mb-6 space-y-3">
+        <div className="flex flex-row flex-nowrap items-center gap-2 min-w-0">
+          <button onClick={handleExport} className="btn-secondary flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 px-2.5 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm">
+            <Download className="w-4 h-4" /> Export
           </button>
-        )}
+          {canAddLead && (
+            <button onClick={handleCreate} className="btn-primary flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 px-2.5 py-2 text-xs sm:px-4 sm:py-2 sm:text-sm">
+              <Plus className="w-4 h-4" /> Add Lead
+            </button>
+          )}
+          <div className="flex-1 min-w-0">
+            <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field w-full text-xs sm:text-sm min-w-0">
+            <option value="">All Sources</option>
+            {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1); }} className="input-field w-full text-xs sm:text-sm min-w-0">
+            {LEAD_DATE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+          </select>
+          <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field w-full text-xs sm:text-sm min-w-0">
+            <option value="createdAt-desc">Newest First</option>
+            <option value="createdAt-asc">Oldest First</option>
+            <option value="leadName-asc">Emp Name A-Z</option>
+          </select>
+        </div>
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="card">
         {loading ? (
           <TableSkeleton />
         ) : leads.length === 0 ? (
@@ -201,7 +204,8 @@ const Leads = () => {
           />
         ) : (
           <>
-            <table className="w-full text-sm">
+            <TableWrapper>
+            <table className="data-table min-w-[900px]">
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
                   {[
@@ -212,27 +216,27 @@ const Leads = () => {
                     { key: 'status', label: 'Status' },
                     { key: 'createdAt', label: 'Date' },
                   ].map((col) => (
-                    <th key={col.key} className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary" onClick={() => toggleSort(col.key)}>
+                    <th key={col.key} className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort(col.key)}>
                       <span className="flex items-center gap-1">{col.label} <ArrowUpDown className="w-3 h-3" /></span>
                     </th>
                   ))}
                   {canViewAllLeads && (
-                    <th className="text-left py-3 px-2 font-medium text-secondary-500">Interest</th>
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Interest</th>
                   )}
-                  <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
+                  <th className="text-right py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                    <td className="py-3 px-2 font-medium">{displayValue(lead.createdBy?.name || lead.leadName)}</td>
-                    <td className="py-3 px-2">{lead.companyName}</td>
-                    <td className="py-3 px-2 text-secondary-500">{displayValue(lead.businessType)}</td>
-                    <td className="py-3 px-2 text-secondary-500">{lead.mobileNumber}</td>
-                    <td className="py-3 px-2">
+                    <td className="py-3 px-2 font-medium whitespace-nowrap">{displayValue(lead.createdBy?.name || lead.leadName)}</td>
+                    <td className="py-3 px-2 whitespace-nowrap">{lead.companyName}</td>
+                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{displayValue(lead.businessType)}</td>
+                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{lead.mobileNumber}</td>
+                    <td className="py-3 px-2 whitespace-nowrap">
                       <StatusBadge status={isSalesExecutive ? getLeadStatusForSalesExecutive(lead.status) : lead.status} />
                     </td>
-                    <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
+                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{formatDate(lead.createdAt)}</td>
                     {canViewAllLeads && (
                       <td className="py-3 px-2">
                         <div className="flex flex-col items-start gap-1.5">
@@ -240,7 +244,7 @@ const Leads = () => {
                             type="button"
                             onClick={() => handleInterest(lead, true)}
                             disabled={updatingInterest === lead._id}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                               lead.status === FOLLOWUP_LEAD_STATUS
                                 ? 'bg-emerald-500 text-white'
                                 : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300'
@@ -253,7 +257,7 @@ const Leads = () => {
                             type="button"
                             onClick={() => handleInterest(lead, false)}
                             disabled={updatingInterest === lead._id}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                               lead.status === NOT_INTERESTED_STATUS
                                 ? 'bg-red-500 text-white'
                                 : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300'
@@ -266,7 +270,7 @@ const Leads = () => {
                       </td>
                     )}
                     <td className="py-3 px-2">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                         {canViewAllLeads && lead.mobileNumber && (
                           <a
                             href={`tel:${lead.mobileNumber.replace(/\D/g, '')}`}
@@ -285,6 +289,7 @@ const Leads = () => {
                 ))}
               </tbody>
             </table>
+            </TableWrapper>
             <Pagination page={page} pages={pages} total={total} onPageChange={setPage} />
           </>
         )}

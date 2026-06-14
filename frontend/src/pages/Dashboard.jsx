@@ -48,7 +48,7 @@ const Dashboard = () => {
     return (
       <div>
         <PageHeader title="Dashboard" subtitle={isAdmin ? 'Overview of your CRM performance' : `Welcome, ${user?.name || 'User'}`} />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           {Array.from({ length: isAdmin ? 8 : user?.role === 'Lead Manager' ? 5 : 3 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       </div>
@@ -76,41 +76,41 @@ const Dashboard = () => {
 
       <DashboardStats stats={stats} />
 
-      <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="card flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-primary" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6">
+        <div className="card flex flex-col gap-2 min-w-0 p-3 sm:p-4 sm:flex-row sm:items-center sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-5 h-5 text-primary" />
           </div>
-          <div>
-            <p className="text-sm text-secondary-500">Conversion Rate</p>
-            <p className="text-2xl font-bold">{stats?.conversionRate || 0}%</p>
-          </div>
-        </div>
-        <div className="card flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center">
-            <UserCircle className="w-6 h-6 text-violet-500" />
-          </div>
-          <div>
-            <p className="text-sm text-secondary-500">Total Employees</p>
-            <p className="text-2xl font-bold">{stats?.totalEmployees ?? 0}</p>
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm text-secondary-500">Conversion Rate</p>
+            <p className="text-lg sm:text-2xl font-bold">{stats?.conversionRate || 0}%</p>
           </div>
         </div>
-        <div className="card flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Users className="w-6 h-6 text-accent" />
+        <div className="card flex flex-col gap-2 min-w-0 p-3 sm:p-4 sm:flex-row sm:items-center sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
+            <UserCircle className="w-5 h-5 text-violet-500" />
           </div>
-          <div>
-            <p className="text-sm text-secondary-500">Total Clients</p>
-            <p className="text-2xl font-bold">{stats?.totalClients || 0}</p>
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm text-secondary-500">Total Employees</p>
+            <p className="text-lg sm:text-2xl font-bold">{stats?.totalEmployees ?? 0}</p>
           </div>
         </div>
-        <div className="card flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-            <CreditCard className="w-6 h-6 text-yellow-500" />
+        <div className="card flex flex-col gap-2 min-w-0 p-3 sm:p-4 sm:flex-row sm:items-center sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5 text-accent" />
           </div>
-          <div>
-            <p className="text-sm text-secondary-500">Pending Payments</p>
-            <p className="text-2xl font-bold">{stats?.pendingPayments || 0}</p>
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm text-secondary-500">Total Clients</p>
+            <p className="text-lg sm:text-2xl font-bold">{stats?.totalClients || 0}</p>
+          </div>
+        </div>
+        <div className="card flex flex-col gap-2 min-w-0 p-3 sm:p-4 sm:flex-row sm:items-center sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center shrink-0">
+            <CreditCard className="w-5 h-5 text-yellow-500" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm text-secondary-500">Pending Payments</p>
+            <p className="text-lg sm:text-2xl font-bold">{stats?.pendingPayments || 0}</p>
           </div>
         </div>
       </div>
@@ -130,12 +130,12 @@ const Dashboard = () => {
           </div>
           <div className="space-y-3">
             {recentLeads.map((lead) => (
-              <Link key={lead._id} to={`/leads/${lead._id}`} className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors">
-                <div>
-                  <p className="font-medium text-sm">{lead.leadName}</p>
-                  <p className="text-xs text-secondary-500">{lead.companyName} · {formatDate(lead.createdAt)}</p>
+              <Link key={lead._id} to={`/leads/${lead._id}`} className="flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors min-w-0">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate">{lead.leadName}</p>
+                  <p className="text-xs text-secondary-500 truncate">{lead.companyName} · {formatDate(lead.createdAt)}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <StatusBadge status={lead.status} />
                   <p className="text-xs text-secondary-500 mt-1">{formatCurrency(lead.budget)}</p>
                 </div>

@@ -22,7 +22,7 @@
     @apply w-full px-3 py-2 border border-secondary-200 dark:border-secondary-600 rounded-lg bg-white dark:bg-secondary-800 text-secondary-800 dark:text-secondary-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200;
   }
   .card {
-    @apply bg-white dark:bg-secondary-800 rounded-xl shadow-sm border border-secondary-100 dark:border-secondary-700 p-6;
+    @apply bg-white dark:bg-secondary-800 rounded-xl shadow-sm border border-secondary-100 dark:border-secondary-700 p-4 sm:p-6;
   }
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-secondary-600 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-secondary-700 hover:text-primary dark:hover:text-primary-300 transition-all duration-200;
@@ -32,6 +32,12 @@
   }
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .table-wrapper {
+    @apply w-full overflow-x-auto lg:overflow-x-visible;
+  }
+  .data-table {
+    @apply w-full text-sm min-w-[640px] lg:min-w-0;
   }
 }
 

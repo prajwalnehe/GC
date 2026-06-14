@@ -9,7 +9,7 @@ import { NAV_TABS, ALL_TAB_IDS } from '../utils/navTabs';
 import Modal from '../components/common/Modal';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { PageHeader } from '../components/common/PageElements';
+import { PageHeader, TableWrapper } from '../components/common/PageElements';
 
 const defaultForm = () => ({
   name: '',
@@ -141,36 +141,37 @@ const Users = () => {
   return (
     <div>
       <PageHeader title="User Management" subtitle="Manage team members, roles & tab access" action={
-        <button onClick={openCreate} className="btn-primary flex items-center gap-2">
+        <button onClick={openCreate} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Add User
         </button>
       } />
 
-      <div className="card overflow-x-auto">
+      <div className="card">
         {loading ? <TableSkeleton cols={6} /> : users.length === 0 ? (
           <EmptyState icon={UserCircle} title="No users" />
         ) : (
-          <table className="w-full text-sm">
+          <TableWrapper>
+          <table className="data-table min-w-[600px]">
             <thead>
               <tr className="border-b border-secondary-100 dark:border-secondary-700">
                 <th className="text-left py-3 px-2 font-medium text-secondary-500">Name</th>
-                <th className="text-left py-3 px-2 font-medium text-secondary-500">Email</th>
+                <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden md:table-cell">Email</th>
                 <th className="text-left py-3 px-2 font-medium text-secondary-500">Role</th>
-                <th className="text-left py-3 px-2 font-medium text-secondary-500">Tabs Access</th>
-                <th className="text-left py-3 px-2 font-medium text-secondary-500">Status</th>
+                <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden lg:table-cell">Tabs Access</th>
+                <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden sm:table-cell">Status</th>
                 <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                  <td className="py-3 px-2 font-medium">{u.name}</td>
-                  <td className="py-3 px-2 text-secondary-500">{u.email}</td>
+                  <td className="py-3 px-2 font-medium max-w-[140px] truncate">{u.name}</td>
+                  <td className="py-3 px-2 text-secondary-500 hidden md:table-cell max-w-[180px] truncate">{u.email}</td>
                   <td className="py-3 px-2"><span className={`badge ${u.role === 'Admin' ? 'bg-primary-100 text-primary-800' : 'bg-secondary-100 text-secondary-700'}`}>{u.role}</span></td>
-                  <td className="py-3 px-2 text-secondary-500">
+                  <td className="py-3 px-2 text-secondary-500 hidden lg:table-cell">
                     {u.role === 'Admin' ? 'All tabs' : `${u.allowedTabs?.length || 0} tabs`}
                   </td>
-                  <td className="py-3 px-2"><span className={`badge ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
+                  <td className="py-3 px-2 hidden sm:table-cell"><span className={`badge ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
                   <td className="py-3 px-2">
                     <div className="flex justify-end gap-1">
                       <button onClick={() => openEdit(u)} className="p-1.5 rounded hover:bg-secondary-100"><Edit className="w-4 h-4" /></button>
@@ -181,6 +182,7 @@ const Users = () => {
               ))}
             </tbody>
           </table>
+          </TableWrapper>
         )}
       </div>
 

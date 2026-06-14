@@ -4,14 +4,14 @@ import {
 import { formatCurrency } from '../../utils/helpers';
 
 const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
-  <div className="card flex items-start justify-between hover:shadow-md transition-shadow">
-    <div>
-      <p className="text-sm text-secondary-500 dark:text-secondary-400 font-medium">{title}</p>
-      <p className="text-2xl font-bold text-secondary-800 dark:text-secondary-100 mt-1">{value}</p>
-      {subtitle && <p className="text-xs text-secondary-400 mt-1">{subtitle}</p>}
+  <div className="card flex flex-col gap-2 min-w-0 hover:shadow-md transition-shadow p-3 sm:p-4">
+    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
     </div>
-    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
-      <Icon className="w-5 h-5 text-white" />
+    <div className="min-w-0">
+      <p className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400 font-medium leading-tight">{title}</p>
+      <p className="text-lg sm:text-2xl font-bold text-secondary-800 dark:text-secondary-100 mt-0.5 truncate">{value}</p>
+      {subtitle && <p className="text-[10px] sm:text-xs text-secondary-400 mt-0.5 line-clamp-2">{subtitle}</p>}
     </div>
   </div>
 );
@@ -29,7 +29,7 @@ const DashboardStats = ({ stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {cards.map((card) => (
         <StatCard key={card.title} {...card} />
       ))}

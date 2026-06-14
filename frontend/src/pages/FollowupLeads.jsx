@@ -10,7 +10,7 @@ import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { SearchBar, Pagination } from '../components/common/PageElements';
+import { SearchBar, Pagination, PageHeader } from '../components/common/PageElements';
 
 const FollowupLeads = () => {
   const { isAdmin, isLeadManager } = useAuth();
@@ -107,36 +107,68 @@ const FollowupLeads = () => {
 
   return (
     <div>
-      <div className="mb-6 flex flex-row flex-nowrap items-center gap-3 overflow-x-auto">
-        <h1 className="text-2xl font-bold text-secondary-800 dark:text-secondary-100 shrink-0 whitespace-nowrap">
-          Followup Leads
-        </h1>
-        <select
+      <PageHeader title="Followup Leads" />
+
+      <div className="card mb-4 sm:mb-6">
+        {/* Mobile */}
+        <div className="flex flex-col gap-3 lg:hidden">
+          <div className="flex flex-row flex-nowrap items-center gap-2">
+            <select
+              value={interestFilter}
+              onChange={(e) => { setInterestFilter(e.target.value); setPage(1); }}
+              className="input-field shrink-0 w-[130px]"
+            >
+              <option value={FOLLOWUP_LEAD_STATUS}>Interested</option>
+              <option value={NOT_INTERESTED_STATUS}>Not Interested</option>
+            </select>
+            <div className="flex-1 min-w-0">
+              <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field w-full text-xs sm:text-sm">
+              <option value="">All Sources</option>
+              {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1); }} className="input-field w-full text-xs sm:text-sm">
+              {LEAD_DATE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+            </select>
+            <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field w-full text-xs sm:text-sm">
+              <option value="createdAt-desc">Newest First</option>
+              <option value="createdAt-asc">Oldest First</option>
+              <option value="leadName-asc">Name A-Z</option>
+            </select>
+          </div>
+        </div>
+        {/* Desktop — one row, no scroll */}
+        <div className="hidden lg:flex flex-row items-center gap-3">
+          <select
             value={interestFilter}
             onChange={(e) => { setInterestFilter(e.target.value); setPage(1); }}
-            className="input-field min-w-[140px] flex-1"
+            className="input-field shrink-0 w-[140px]"
           >
             <option value={FOLLOWUP_LEAD_STATUS}>Interested</option>
             <option value={NOT_INTERESTED_STATUS}>Not Interested</option>
           </select>
-          <div className="flex-[2] min-w-[180px]">
+          <div className="flex-1 min-w-[200px]">
             <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search leads..." />
           </div>
-          <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field min-w-[140px] flex-1">
+          <select value={sourceFilter} onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }} className="input-field shrink-0 w-[150px]">
             <option value="">All Sources</option>
             {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1); }} className="input-field min-w-[120px] flex-1">
+          <select value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1); }} className="input-field shrink-0 w-[120px]">
             {LEAD_DATE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
-          <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field min-w-[140px] flex-1">
+          <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field shrink-0 w-[140px]">
             <option value="createdAt-desc">Newest First</option>
             <option value="createdAt-asc">Oldest First</option>
             <option value="leadName-asc">Name A-Z</option>
-        </select>
+          </select>
+        </div>
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="card">
         {loading ? (
           <TableSkeleton />
         ) : leads.length === 0 ? (
@@ -150,7 +182,8 @@ const FollowupLeads = () => {
           />
         ) : (
           <>
-            <table className="w-full text-sm">
+            <div className="w-full overflow-x-auto lg:overflow-visible">
+            <table className="w-full text-sm min-w-[900px] lg:min-w-0">
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
                   {[
@@ -162,26 +195,26 @@ const FollowupLeads = () => {
                     { key: 'createdAt', label: 'Date' },
                   ].map((col) => (
                     <th key={col.key} className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary" onClick={() => toggleSort(col.key)}>
-                      <span className="flex items-center gap-1">{col.label} <ArrowUpDown className="w-3 h-3" /></span>
+                      <span className="flex items-center gap-1 whitespace-nowrap">{col.label} <ArrowUpDown className="w-3 h-3" /></span>
                     </th>
                   ))}
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Status</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Status</th>
                   {isInterestedView && (isAdmin || isLeadManager) && (
-                    <th className="text-left py-3 px-2 font-medium text-secondary-500">IN / OUT</th>
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">IN / OUT</th>
                   )}
-                  <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
+                  <th className="text-right py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                    <td className="py-3 px-2 font-medium">{lead.leadName}</td>
-                    <td className="py-3 px-2">{lead.companyName}</td>
-                    <td className="py-3 px-2 text-secondary-500">{displayValue(lead.businessType)}</td>
-                    <td className="py-3 px-2 text-secondary-500">{lead.mobileNumber}</td>
-                    <td className="py-3 px-2 text-secondary-500">{displayValue(lead.state)}</td>
-                    <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
-                    <td className="py-3 px-2"><StatusBadge status={lead.status} /></td>
+                    <td className="py-3 px-2 font-medium max-w-[120px] truncate">{lead.leadName}</td>
+                    <td className="py-3 px-2 max-w-[100px] truncate">{lead.companyName}</td>
+                    <td className="py-3 px-2 text-secondary-500 max-w-[100px] truncate">{displayValue(lead.businessType)}</td>
+                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{lead.mobileNumber}</td>
+                    <td className="py-3 px-2 text-secondary-500 max-w-[90px] truncate">{displayValue(lead.state)}</td>
+                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{formatDate(lead.createdAt)}</td>
+                    <td className="py-3 px-2 whitespace-nowrap"><StatusBadge status={lead.status} /></td>
                     {isInterestedView && isAdmin && (
                       <td className="py-3 px-2">
                         <div className="flex flex-col items-start gap-1.5">
@@ -189,7 +222,7 @@ const FollowupLeads = () => {
                             type="button"
                             onClick={() => handleClientFollowup(lead, 'IN')}
                             disabled={markingClient === lead._id}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 whitespace-nowrap"
                           >
                             <LogIn className="w-3.5 h-3.5" />
                             IN
@@ -198,7 +231,7 @@ const FollowupLeads = () => {
                             type="button"
                             onClick={() => handleClientFollowup(lead, 'OUT')}
                             disabled={markingClient === lead._id}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                             OUT
@@ -207,7 +240,7 @@ const FollowupLeads = () => {
                       </td>
                     )}
                     {isInterestedView && isLeadManager && (
-                      <td className="py-3 px-2">
+                      <td className="py-3 px-2 whitespace-nowrap">
                         <span className={`badge ${
                           lead.clientFollowupType === 'IN'
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
@@ -221,7 +254,7 @@ const FollowupLeads = () => {
                       </td>
                     )}
                     <td className="py-3 px-2">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                         <Link to={`/leads/${lead._id}`} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Eye className="w-4 h-4" /></Link>
                         <button onClick={() => handleEdit(lead)} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Edit className="w-4 h-4" /></button>
                       </div>
@@ -230,6 +263,7 @@ const FollowupLeads = () => {
                 ))}
               </tbody>
             </table>
+            </div>
             <Pagination page={page} pages={pages} total={total} onPageChange={setPage} />
           </>
         )}

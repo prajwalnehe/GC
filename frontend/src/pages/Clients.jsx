@@ -6,7 +6,7 @@ import { formatDate, displayValue } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { PageHeader, SearchBar, Pagination } from '../components/common/PageElements';
+import { PageHeader, SearchBar, Pagination, TableWrapper } from '../components/common/PageElements';
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
@@ -54,37 +54,38 @@ const Clients = () => {
   return (
     <div>
       <PageHeader title="Clients" subtitle={`${total} clients`} action={
-        <button onClick={() => { setEditing(null); setForm({ clientName: '', companyName: '', projectDetails: '', contactDetails: { email: '', phone: '', city: '' } }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => { setEditing(null); setForm({ clientName: '', companyName: '', projectDetails: '', contactDetails: { email: '', phone: '', city: '' } }); setShowModal(true); }} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Add Client
         </button>
       } />
 
-      <div className="card mb-6"><SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search clients..." /></div>
+      <div className="card mb-4 sm:mb-6"><SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search clients..." /></div>
 
-      <div className="card overflow-x-auto">
+      <div className="card">
         {loading ? <TableSkeleton cols={6} /> : clients.length === 0 ? (
           <EmptyState icon={Building2} title="No clients" description="Clients appear when a proposal is approved" />
         ) : (
           <>
-            <table className="w-full text-sm">
+            <TableWrapper>
+            <table className="data-table">
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Client</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Company</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Email</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Phone</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Created</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden md:table-cell">Company</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden lg:table-cell">Email</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden sm:table-cell">Phone</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden md:table-cell">Created</th>
                   <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {clients.map((c) => (
                   <tr key={c._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                    <td className="py-3 px-2 font-medium">{c.clientName}</td>
-                    <td className="py-3 px-2">{c.companyName}</td>
-                    <td className="py-3 px-2 text-secondary-500">{displayValue(c.contactDetails?.email)}</td>
-                    <td className="py-3 px-2 text-secondary-500">{displayValue(c.contactDetails?.phone)}</td>
-                    <td className="py-3 px-2 text-secondary-500">{formatDate(c.createdAt)}</td>
+                    <td className="py-3 px-2 font-medium max-w-[140px] truncate">{c.clientName}</td>
+                    <td className="py-3 px-2 hidden md:table-cell max-w-[120px] truncate">{c.companyName}</td>
+                    <td className="py-3 px-2 text-secondary-500 hidden lg:table-cell">{displayValue(c.contactDetails?.email)}</td>
+                    <td className="py-3 px-2 text-secondary-500 hidden sm:table-cell whitespace-nowrap">{displayValue(c.contactDetails?.phone)}</td>
+                    <td className="py-3 px-2 text-secondary-500 hidden md:table-cell whitespace-nowrap">{formatDate(c.createdAt)}</td>
                     <td className="py-3 px-2">
                       <div className="flex justify-end gap-1">
                         <button onClick={() => { setEditing(c); setForm(c); setShowModal(true); }} className="p-1.5 rounded hover:bg-secondary-100"><Edit className="w-4 h-4" /></button>
@@ -95,6 +96,7 @@ const Clients = () => {
                 ))}
               </tbody>
             </table>
+            </TableWrapper>
             <Pagination page={page} pages={pages} total={total} onPageChange={setPage} />
           </>
         )}
@@ -102,7 +104,7 @@ const Clients = () => {
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Client' : 'Add Client'} size="lg">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label className="block text-sm font-medium mb-1.5">Client Name</label><input type="text" required value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} className="input-field" /></div>
             <div><label className="block text-sm font-medium mb-1.5">Company</label><input type="text" required value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} className="input-field" /></div>
             <div><label className="block text-sm font-medium mb-1.5">Email</label><input type="email" value={form.contactDetails?.email || ''} onChange={(e) => setForm({ ...form, contactDetails: { ...form.contactDetails, email: e.target.value } })} className="input-field" /></div>

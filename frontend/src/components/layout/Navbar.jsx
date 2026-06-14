@@ -42,18 +42,18 @@ const Navbar = ({ onMenuToggle, sidebarOpen }) => {
 
   return (
     <header className={`fixed top-0 right-0 z-30 h-16 bg-white dark:bg-secondary-800 border-b border-secondary-100 dark:border-secondary-700 transition-all duration-300 ${sidebarOpen ? 'left-64' : 'left-20'} max-lg:left-0`}>
-      <div className="flex items-center justify-between h-full px-4 lg:px-6">
-        <button onClick={onMenuToggle} className="lg:hidden p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-700">
+      <div className="flex items-center justify-between h-full px-3 sm:px-4 lg:px-6 gap-2">
+        <button onClick={onMenuToggle} className="lg:hidden p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-700 shrink-0">
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="hidden lg:block">
-          <p className="text-sm text-secondary-500">
+        <div className="hidden lg:block min-w-0 flex-1">
+          <p className="text-sm text-secondary-500 truncate">
             Welcome back, <span className="font-semibold text-secondary-800 dark:text-secondary-100">{user?.name}</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0">
           <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-colors">
             {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-secondary-600" />}
           </button>
@@ -72,7 +72,7 @@ const Navbar = ({ onMenuToggle, sidebarOpen }) => {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-secondary-800 rounded-xl shadow-lg border border-secondary-100 dark:border-secondary-700 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] bg-white dark:bg-secondary-800 rounded-xl shadow-lg border border-secondary-100 dark:border-secondary-700 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
                   <h3 className="font-semibold text-sm">Notifications</h3>
                   {unreadCount > 0 && (
@@ -111,7 +111,7 @@ const Navbar = ({ onMenuToggle, sidebarOpen }) => {
             </button>
 
             {showProfile && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-secondary-800 rounded-xl shadow-lg border border-secondary-100 dark:border-secondary-700 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-[min(12rem,calc(100vw-1.5rem))] bg-white dark:bg-secondary-800 rounded-xl shadow-lg border border-secondary-100 dark:border-secondary-700 overflow-hidden">
                 <div className="px-4 py-3 border-b border-secondary-100 dark:border-secondary-700">
                   <p className="font-medium text-sm">{user?.name}</p>
                   <p className="text-xs text-secondary-500">{user?.role}</p>

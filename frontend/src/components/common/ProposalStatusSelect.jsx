@@ -18,8 +18,8 @@ const ProposalStatusSelect = ({ value, onChange, disabled, fullWidth = false }) 
 
     setMenuPos({
       top: openUp ? rect.top - menuHeight - 4 : rect.bottom + 4,
-      left: rect.left,
-      width: Math.max(rect.width, 160),
+      left: Math.min(rect.left, window.innerWidth - Math.max(rect.width, 160) - 8),
+      width: Math.min(Math.max(rect.width, 160), window.innerWidth - 16),
     });
   }, []);
 
@@ -88,7 +88,7 @@ const ProposalStatusSelect = ({ value, onChange, disabled, fullWidth = false }) 
           className={`${getStatusColor(value)} flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
             fullWidth
               ? 'w-full justify-between px-3 py-2.5 rounded-lg text-sm border border-transparent'
-              : 'badge py-1.5 px-2.5 min-w-[120px] justify-between'
+              : 'badge py-1.5 px-2 min-w-[96px] justify-between text-xs'
           }`}
         >
           <span>{value}</span>

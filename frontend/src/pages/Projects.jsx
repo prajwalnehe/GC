@@ -7,7 +7,7 @@ import Modal from '../components/common/Modal';
 import StatusBadge from '../components/common/StatusBadge';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { PageHeader, Pagination } from '../components/common/PageElements';
+import { PageHeader, Pagination, TableWrapper } from '../components/common/PageElements';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -65,23 +65,24 @@ const Projects = () => {
   return (
     <div>
       <PageHeader title="Projects" subtitle="Manage client projects" action={
-        <button onClick={() => { setEditing(null); setForm({ projectName: '', client: '', clientName: '', description: '', startDate: '', endDate: '', budget: '', status: 'Planning', assignedTeam: [] }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => { setEditing(null); setForm({ projectName: '', client: '', clientName: '', description: '', startDate: '', endDate: '', budget: '', status: 'Planning', assignedTeam: [] }); setShowModal(true); }} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Add Project
         </button>
       } />
 
-      <div className="card overflow-x-auto">
+      <div className="card">
         {loading ? <TableSkeleton cols={6} /> : projects.length === 0 ? (
           <EmptyState icon={FolderKanban} title="No projects" description="Create your first project" />
         ) : (
           <>
-            <table className="w-full text-sm">
+            <TableWrapper>
+            <table className="data-table">
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Project</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Client</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Budget</th>
-                  <th className="text-left py-3 px-2 font-medium text-secondary-500">Timeline</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden md:table-cell">Client</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden sm:table-cell">Budget</th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 hidden lg:table-cell">Timeline</th>
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Status</th>
                   <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
                 </tr>
@@ -89,10 +90,10 @@ const Projects = () => {
               <tbody>
                 {projects.map((p) => (
                   <tr key={p._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                    <td className="py-3 px-2 font-medium">{p.projectName}</td>
-                    <td className="py-3 px-2">{p.clientName}</td>
-                    <td className="py-3 px-2">{formatCurrency(p.budget)}</td>
-                    <td className="py-3 px-2 text-secondary-500 text-xs">{formatDate(p.startDate)} - {formatDate(p.endDate)}</td>
+                    <td className="py-3 px-2 font-medium max-w-[140px] truncate">{p.projectName}</td>
+                    <td className="py-3 px-2 hidden md:table-cell max-w-[120px] truncate">{p.clientName}</td>
+                    <td className="py-3 px-2 hidden sm:table-cell whitespace-nowrap">{formatCurrency(p.budget)}</td>
+                    <td className="py-3 px-2 text-secondary-500 text-xs hidden lg:table-cell whitespace-nowrap">{formatDate(p.startDate)} - {formatDate(p.endDate)}</td>
                     <td className="py-3 px-2"><StatusBadge status={p.status} /></td>
                     <td className="py-3 px-2">
                       <div className="flex justify-end gap-1">
@@ -104,6 +105,7 @@ const Projects = () => {
                 ))}
               </tbody>
             </table>
+            </TableWrapper>
             <Pagination page={page} pages={pages} total={total} onPageChange={setPage} />
           </>
         )}
@@ -111,7 +113,7 @@ const Projects = () => {
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Project' : 'Add Project'} size="lg">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label className="block text-sm font-medium mb-1.5">Project Name</label><input type="text" required value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} className="input-field" /></div>
             <div><label className="block text-sm font-medium mb-1.5">Client</label>
               <select required value={form.client} onChange={(e) => handleClientChange(e.target.value)} className="input-field">

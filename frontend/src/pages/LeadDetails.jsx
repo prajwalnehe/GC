@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import {
   ArrowLeft, Mail, Phone, MapPin, Building, Calendar, Upload, FileText, Send,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { leadsAPI, followUpsAPI, proposalsAPI, documentsAPI } from '../services/api';
 import { formatCurrency, formatDate, formatDateTime, displayValue } from '../utils/helpers';
 import StatusBadge from '../components/common/StatusBadge';
@@ -11,6 +12,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import Modal from '../components/common/Modal';
 
 const LeadDetails = () => {
+  const { canViewAllLeads } = useAuth();
   const { id } = useParams();
   const [lead, setLead] = useState(null);
   const [followUps, setFollowUps] = useState([]);
@@ -102,11 +104,20 @@ const LeadDetails = () => {
       </Link>
 
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">{lead.leadName}</h1>
-          <p className="text-secondary-500">{lead.contactPerson} · {lead.companyName}</p>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">{lead.leadName}</h1>
+          <p className="text-secondary-500 text-sm sm:text-base truncate">{lead.contactPerson} · {lead.companyName}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {canViewAllLeads && lead.mobileNumber && (
+            <a
+              href={`tel:${lead.mobileNumber.replace(/\D/g, '')}`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
+            >
+              <Phone className="w-4 h-4" />
+              Call
+            </a>
+          )}
           <StatusBadge status={lead.status} />
         </div>
       </div>
@@ -159,9 +170,9 @@ const LeadDetails = () => {
 
           <div className="card">
             <h3 className="font-semibold mb-4">Notes History</h3>
-            <form onSubmit={handleAddNote} className="flex gap-2 mb-4">
-              <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a note..." className="input-field flex-1" />
-              <button type="submit" className="btn-primary"><Send className="w-4 h-4" /></button>
+            <form onSubmit={handleAddNote} className="flex flex-col sm:flex-row gap-2 mb-4">
+              <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a note..." className="input-field flex-1 min-w-0" />
+              <button type="submit" className="btn-primary flex items-center justify-center gap-2 sm:px-4"><Send className="w-4 h-4" /><span className="sm:hidden">Send</span></button>
             </form>
             <div className="space-y-3">
               {lead.notesHistory?.length > 0 ? lead.notesHistory.slice().reverse().map((n, i) => (
