@@ -19,6 +19,7 @@ const followUpSchema = new mongoose.Schema(
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    clientType: { type: String, enum: ['IN', 'OUT'], default: 'IN' },
   },
   { timestamps: true }
 );

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Edit, Eye, ArrowUpDown, UserCheck } from 'lucide-react';
+import { Edit, Eye, ArrowUpDown, UserCheck, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
 import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate } from '../utils/helpers';
 import Modal from '../components/common/Modal';
@@ -12,6 +13,7 @@ import { TableSkeleton } from '../components/common/Skeleton';
 import { PageHeader, SearchBar, Pagination } from '../components/common/PageElements';
 
 const FollowupLeads = () => {
+  const { isAdmin } = useAuth();
   const [leads, setLeads] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +29,7 @@ const FollowupLeads = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [markingClient, setMarkingClient] = useState(null);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -73,6 +76,20 @@ const FollowupLeads = () => {
       toast.error(err.response?.data?.message || 'Failed to update lead');
     }
     setSaving(false);
+  };
+
+  const handleClientFollowup = async (lead, type) => {
+    setMarkingClient(lead._id);
+    try {
+      await leadsAPI.markClientFollowup(lead._id, { type });
+      setLeads((prev) => prev.filter((l) => l._id !== lead._id));
+      setTotal((prev) => Math.max(0, prev - 1));
+      toast.success(type === 'IN' ? 'Added to final Client followup (IN)' : 'Marked as Client OUT');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update client follow-up');
+      fetchLeads();
+    }
+    setMarkingClient(null);
   };
 
   const toggleSort = (field) => {
@@ -160,6 +177,12 @@ const FollowupLeads = () => {
                     </th>
                   ))}
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Status</th>
+                  {isAdmin && (
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500">Follow-up By</th>
+                  )}
+                  {isAdmin && isInterestedView && (
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500">Client</th>
+                  )}
                   <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
                 </tr>
               </thead>
@@ -172,6 +195,38 @@ const FollowupLeads = () => {
                     <td className="py-3 px-2 text-secondary-500">{lead.state || '-'}</td>
                     <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
                     <td className="py-3 px-2"><StatusBadge status={lead.status} /></td>
+                    {isAdmin && (
+                      <td className="py-3 px-2">
+                        <p className="font-medium">{lead.followUpBy?.name || '-'}</p>
+                        {lead.followUpBy?.role && (
+                          <p className="text-xs text-secondary-500">{lead.followUpBy.role}</p>
+                        )}
+                      </td>
+                    )}
+                    {isAdmin && isInterestedView && (
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleClientFollowup(lead, 'IN')}
+                            disabled={markingClient === lead._id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          >
+                            <LogIn className="w-3.5 h-3.5" />
+                            Client IN
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleClientFollowup(lead, 'OUT')}
+                            disabled={markingClient === lead._id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            Client OUT
+                          </button>
+                        </div>
+                      </td>
+                    )}
                     <td className="py-3 px-2">
                       <div className="flex items-center justify-end gap-1">
                         <Link to={`/leads/${lead._id}`} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Eye className="w-4 h-4" /></Link>

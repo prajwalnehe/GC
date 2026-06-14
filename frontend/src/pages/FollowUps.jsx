@@ -25,7 +25,7 @@ const FollowUps = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data } = await followUpsAPI.getAll({ reminderStatus: statusFilter, page, limit: 10 });
+      const { data } = await followUpsAPI.getAll({ reminderStatus: statusFilter, clientType: 'IN', page, limit: 10 });
       setFollowUps(data.followUps);
       setTotal(data.total);
       setPages(data.pages);
@@ -44,7 +44,7 @@ const FollowUps = () => {
         await followUpsAPI.update(editing._id, form);
         toast.success('Follow-up updated');
       } else {
-        await followUpsAPI.create(form);
+        await followUpsAPI.create({ ...form, clientType: 'IN' });
         toast.success('Follow-up created');
       }
       setShowModal(false);
@@ -61,7 +61,7 @@ const FollowUps = () => {
 
   return (
     <div>
-      <PageHeader title="Follow-ups" subtitle="Manage lead follow-up schedules" action={
+      <PageHeader title="final Client followup (IN)" subtitle="Manage lead follow-up schedules" action={
         <button onClick={() => { setEditing(null); setForm({ followUpDate: '', followUpTime: '', notes: '', reminder: true, lead: '', reminderStatus: 'Pending' }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Follow-up
         </button>

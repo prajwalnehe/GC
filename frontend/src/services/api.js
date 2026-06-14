@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 API.interceptors.request.use((config) => {
@@ -54,6 +54,7 @@ export const leadsAPI = {
   update: (id, data) => API.put(`/leads/${id}`, data),
   delete: (id) => API.delete(`/leads/${id}`),
   addNote: (id, data) => API.post(`/leads/${id}/notes`, data),
+  markClientFollowup: (id, data) => API.post(`/leads/${id}/client-followup`, data),
   exportCSV: () => API.get('/leads/export', { responseType: 'blob' }),
 };
 

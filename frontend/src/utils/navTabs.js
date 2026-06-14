@@ -2,7 +2,7 @@ export const NAV_TABS = [
   { id: 'dashboard', path: '/dashboard', label: 'Dashboard' },
   { id: 'leads', path: '/leads', label: 'Leads' },
   { id: 'followup-leads', path: '/followup-leads', label: 'Followup Leads' },
-  { id: 'follow-ups', path: '/follow-ups', label: 'Follow-ups' },
+  { id: 'follow-ups', path: '/follow-ups', label: 'final Client followup (IN)' },
   { id: 'proposals', path: '/proposals', label: 'Proposals' },
   { id: 'clients', path: '/clients', label: 'Clients' },
   { id: 'projects', path: '/projects', label: 'Projects' },

@@ -4,8 +4,8 @@ const Notification = require('../models/Notification');
 
 const getFollowUps = async (req, res) => {
   try {
-    const { status, reminderStatus, leadId, page = 1, limit = 10 } = req.query;
-    const query = {};
+    const { status, reminderStatus, leadId, clientType = 'IN', page = 1, limit = 10 } = req.query;
+    const query = { clientType };
     if (status) query.status = status;
     if (reminderStatus) query.reminderStatus = reminderStatus;
     if (leadId) query.lead = leadId;
