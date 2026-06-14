@@ -46,6 +46,7 @@ const leadSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
+        'Pending',
         'New Lead',
         'Contacted',
         'Interested',
@@ -58,7 +59,7 @@ const leadSchema = new mongoose.Schema(
         'Lost',
         'On Hold',
       ],
-      default: 'New Lead',
+      default: 'Pending',
     },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

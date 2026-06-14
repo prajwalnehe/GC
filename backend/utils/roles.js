@@ -16,4 +16,6 @@ const canAccessLead = (user, lead) => {
   return lead.assignedTo?.toString() === user._id.toString();
 };
 
-module.exports = { canViewAllLeads, canCreateLead, getLeadScopeFilter, getFollowUpScopeFilter, canAccessLead };
+const canChangeLeadStatus = (user) => canViewAllLeads(user);
+
+module.exports = { canViewAllLeads, canCreateLead, canChangeLeadStatus, getLeadScopeFilter, getFollowUpScopeFilter, canAccessLead };

@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const { seedAdminUser } = require('./utils/seedAdmin');
 const Proposal = require('./models/Proposal');
+const Lead = require('./models/Lead');
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ const startServer = async () => {
   await connectDB();
   await seedAdminUser();
   await Proposal.updateMany({ status: 'Draft' }, { $set: { status: 'Pending' } });
+  await Lead.updateMany({ status: 'New Lead' }, { $set: { status: 'Pending' } });
   const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });

@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
-import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate, displayValue } from '../utils/helpers';
+import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, LEAD_PENDING_STATUS, LEAD_DATE_FILTERS, formatDate, displayValue, getLeadStatusForSalesExecutive } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
@@ -15,12 +15,14 @@ import { Users } from 'lucide-react';
 
 const Leads = () => {
   const { canViewAllLeads, isLeadManager, user } = useAuth();
+  const isSalesExecutive = user?.role === 'Sales Executive';
   const canAddLead = !isLeadManager;
   const [leads, setLeads] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('today');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
@@ -36,13 +38,15 @@ const Leads = () => {
     setLoading(true);
     try {
       const params = {
-        search, leadSource: sourceFilter, sortBy, sortOrder, page, limit: 10,
-        mainList: 'true',
+        search, leadSource: sourceFilter, dateFilter, sortBy, sortOrder, page, limit: 10,
+        ...(canViewAllLeads ? { mainList: 'true' } : {}),
       };
       const { data } = await leadsAPI.getAll(params);
-      const visibleLeads = data.leads.filter(
-        (lead) => lead.status !== FOLLOWUP_LEAD_STATUS && lead.status !== NOT_INTERESTED_STATUS
-      );
+      const visibleLeads = isSalesExecutive
+        ? data.leads
+        : data.leads.filter(
+          (lead) => lead.status !== FOLLOWUP_LEAD_STATUS && lead.status !== NOT_INTERESTED_STATUS
+        );
       setLeads(visibleLeads);
       setTotal(data.total);
       setPages(data.pages);
@@ -52,7 +56,7 @@ const Leads = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchLeads(); }, [search, sourceFilter, sortBy, sortOrder, page]);
+  useEffect(() => { fetchLeads(); }, [search, sourceFilter, dateFilter, sortBy, sortOrder, page]);
 
   useEffect(() => {
     usersAPI.getAll().then(({ data }) => setUsers(data)).catch(() => {});
@@ -61,7 +65,7 @@ const Leads = () => {
   const handleCreate = () => {
     setEditingLead(null);
     setForm({
-      status: 'New Lead',
+      status: LEAD_PENDING_STATUS,
       leadSource: 'Website',
       requirementType: 'Web Development',
       businessType: 'Other',
@@ -85,7 +89,7 @@ const Leads = () => {
         payload.leadName = form.leadName;
         payload.contactPerson = form.leadName;
         payload.email = `${form.mobileNumber.replace(/\D/g, '')}@growwcode.local`;
-        payload.status = 'New Lead';
+        payload.status = LEAD_PENDING_STATUS;
       } else {
         payload.status = editingLead.status;
       }
@@ -167,6 +171,9 @@ const Leads = () => {
           <option value="">All Sources</option>
           {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
+        <select value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1); }} className="input-field min-w-[120px] flex-1">
+          {LEAD_DATE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+        </select>
         <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field min-w-[140px] flex-1">
           <option value="createdAt-desc">Newest First</option>
           <option value="createdAt-asc">Oldest First</option>
@@ -223,7 +230,7 @@ const Leads = () => {
                     <td className="py-3 px-2 text-secondary-500">{displayValue(lead.businessType)}</td>
                     <td className="py-3 px-2 text-secondary-500">{lead.mobileNumber}</td>
                     <td className="py-3 px-2">
-                      <StatusBadge status={lead.status} />
+                      <StatusBadge status={isSalesExecutive ? getLeadStatusForSalesExecutive(lead.status) : lead.status} />
                     </td>
                     <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
                     {canViewAllLeads && (

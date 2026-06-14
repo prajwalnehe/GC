@@ -1,4 +1,5 @@
 export const LEAD_STATUSES = [
+  'Pending',
   'New Lead',
   'Contacted',
   'Interested',
@@ -14,6 +15,18 @@ export const LEAD_STATUSES = [
 
 export const FOLLOWUP_LEAD_STATUS = 'Interested';
 export const NOT_INTERESTED_STATUS = 'Not Interested';
+export const LEAD_DATE_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'today', label: 'Today' },
+  { value: 'yesterday', label: 'Yesterday' },
+];
+
+export const LEAD_PENDING_STATUS = 'Pending';
+
+export const getLeadStatusForSalesExecutive = (status) => {
+  if (status === FOLLOWUP_LEAD_STATUS || status === NOT_INTERESTED_STATUS) return status;
+  return LEAD_PENDING_STATUS;
+};
 
 export const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',

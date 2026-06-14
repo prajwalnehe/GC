@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { Edit, Eye, ArrowUpDown, UserCheck, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
-import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, formatDate, displayValue } from '../utils/helpers';
+import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, LEAD_DATE_FILTERS, formatDate, displayValue } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
@@ -13,13 +13,14 @@ import { TableSkeleton } from '../components/common/Skeleton';
 import { SearchBar, Pagination } from '../components/common/PageElements';
 
 const FollowupLeads = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isLeadManager } = useAuth();
   const [leads, setLeads] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [interestFilter, setInterestFilter] = useState(FOLLOWUP_LEAD_STATUS);
   const [sourceFilter, setSourceFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('today');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
@@ -38,6 +39,7 @@ const FollowupLeads = () => {
         search,
         status: interestFilter,
         leadSource: sourceFilter,
+        dateFilter,
         sortBy,
         sortOrder,
         page,
@@ -52,7 +54,7 @@ const FollowupLeads = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchLeads(); }, [search, interestFilter, sourceFilter, sortBy, sortOrder, page]);
+  useEffect(() => { fetchLeads(); }, [search, interestFilter, sourceFilter, dateFilter, sortBy, sortOrder, page]);
 
   useEffect(() => {
     usersAPI.getAll().then(({ data }) => setUsers(data)).catch(() => {});
@@ -124,6 +126,9 @@ const FollowupLeads = () => {
             <option value="">All Sources</option>
             {LEAD_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
+          <select value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1); }} className="input-field min-w-[120px] flex-1">
+            {LEAD_DATE_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+          </select>
           <select value={`${sortBy}-${sortOrder}`} onChange={(e) => { const [f, o] = e.target.value.split('-'); setSortBy(f); setSortOrder(o); }} className="input-field min-w-[140px] flex-1">
             <option value="createdAt-desc">Newest First</option>
             <option value="createdAt-asc">Oldest First</option>
@@ -161,7 +166,7 @@ const FollowupLeads = () => {
                     </th>
                   ))}
                   <th className="text-left py-3 px-2 font-medium text-secondary-500">Status</th>
-                  {isAdmin && isInterestedView && (
+                  {isInterestedView && (isAdmin || isLeadManager) && (
                     <th className="text-left py-3 px-2 font-medium text-secondary-500">IN / OUT</th>
                   )}
                   <th className="text-right py-3 px-2 font-medium text-secondary-500">Actions</th>
@@ -177,7 +182,7 @@ const FollowupLeads = () => {
                     <td className="py-3 px-2 text-secondary-500">{displayValue(lead.state)}</td>
                     <td className="py-3 px-2 text-secondary-500">{formatDate(lead.createdAt)}</td>
                     <td className="py-3 px-2"><StatusBadge status={lead.status} /></td>
-                    {isAdmin && isInterestedView && (
+                    {isInterestedView && isAdmin && (
                       <td className="py-3 px-2">
                         <div className="flex flex-col items-start gap-1.5">
                           <button
@@ -199,6 +204,20 @@ const FollowupLeads = () => {
                             OUT
                           </button>
                         </div>
+                      </td>
+                    )}
+                    {isInterestedView && isLeadManager && (
+                      <td className="py-3 px-2">
+                        <span className={`badge ${
+                          lead.clientFollowupType === 'IN'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                            : lead.clientFollowupType === 'OUT'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        }`}
+                        >
+                          {lead.clientFollowupType || 'Pending'}
+                        </span>
                       </td>
                     )}
                     <td className="py-3 px-2">

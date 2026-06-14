@@ -26,7 +26,7 @@ const employeeCards = (stats) => [
     value: stats?.pendingLeads || 0,
     icon: Clock,
     color: 'bg-yellow-500',
-    subtitle: 'Leads shown on Leads page',
+    subtitle: 'Awaiting admin review',
   },
   {
     title: 'Follow-ups Taken',
@@ -50,7 +50,7 @@ const leadManagerCards = (stats) => [
     value: stats?.pendingLeads || 0,
     icon: Clock,
     color: 'bg-yellow-500',
-    subtitle: 'Leads shown on Leads page',
+    subtitle: 'Awaiting admin review',
   },
   {
     title: 'Follow-ups Taken',

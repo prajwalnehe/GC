@@ -27,7 +27,7 @@ const getDashboardStats = async (req, res) => {
       revenueData,
     ] = await Promise.all([
       Lead.countDocuments(leadFilter),
-      Lead.countDocuments({ ...leadFilter, status: { $nin: ['Interested', 'Not Interested'] } }),
+      Lead.countDocuments({ ...leadFilter, status: 'Pending' }),
       Lead.countDocuments({ ...leadFilter, status: 'New Lead' }),
       Lead.countDocuments({ ...leadFilter, status: 'Interested' }),
       Lead.countDocuments({ ...leadFilter, status: 'Not Interested' }),

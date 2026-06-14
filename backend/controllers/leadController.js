@@ -2,12 +2,29 @@ const Lead = require('../models/Lead');
 const Notification = require('../models/Notification');
 const Proposal = require('../models/Proposal');
 const { Parser } = require('json2csv');
-const { getLeadScopeFilter, canAccessLead, canCreateLead } = require('../utils/roles');
+const { getLeadScopeFilter, canAccessLead, canCreateLead, canChangeLeadStatus } = require('../utils/roles');
 const { createClientFromLead } = require('../utils/clientFromLead');
 
 const FOLLOWUP_LIST_STATUSES = ['Interested', 'Not Interested'];
 
 const isMainLeadsList = (value) => value === 'true' || value === true || value === '1';
+
+const applyDateFilter = (query, dateFilter) => {
+  if (!dateFilter || dateFilter === 'all') return;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+  if (dateFilter === 'today') {
+    query.createdAt = { $gte: startOfToday, $lt: startOfTomorrow };
+  } else if (dateFilter === 'yesterday') {
+    query.createdAt = { $gte: startOfYesterday, $lt: startOfToday };
+  }
+};
 
 const enrichFollowUpBy = (lead) => {
   const doc = lead.toObject ? lead.toObject() : { ...lead };
@@ -30,6 +47,7 @@ const getLeads = async (req, res) => {
       excludeStatuses,
       mainList,
       leadSource,
+      dateFilter,
       sortBy = 'createdAt',
       sortOrder = 'desc',
       page = 1,
@@ -48,10 +66,10 @@ const getLeads = async (req, res) => {
     }
     if (status) {
       query.status = status;
-      if (FOLLOWUP_LIST_STATUSES.includes(status)) {
+      if (FOLLOWUP_LIST_STATUSES.includes(status) && req.user.role !== 'Lead Manager') {
         query.clientFollowupType = { $nin: ['IN', 'OUT'] };
       }
-    } else if (isMainLeadsList(mainList)) {
+    } else if (isMainLeadsList(mainList) && req.user.role !== 'Sales Executive') {
       query.status = { $nin: FOLLOWUP_LIST_STATUSES };
     } else if (excludeStatuses) {
       query.status = { $nin: excludeStatuses.split(',').map((s) => s.trim()) };
@@ -59,6 +77,7 @@ const getLeads = async (req, res) => {
       query.status = { $ne: excludeStatus };
     }
     if (leadSource) query.leadSource = leadSource;
+    applyDateFilter(query, dateFilter);
 
     const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -114,6 +133,7 @@ const createLead = async (req, res) => {
       return res.status(403).json({ message: 'Lead Manager cannot create leads' });
     }
     const leadData = { ...req.body, createdBy: req.user._id };
+    if (!leadData.status) leadData.status = 'Pending';
     if (!leadData.assignedTo) leadData.assignedTo = req.user._id;
 
     const lead = await Lead.create(leadData);
@@ -153,6 +173,10 @@ const updateLead = async (req, res) => {
 
     const oldStatus = lead.status;
     const oldAssigned = lead.assignedTo?.toString();
+
+    if (!canChangeLeadStatus(req.user) && req.body.status !== undefined) {
+      delete req.body.status;
+    }
 
     Object.keys(req.body).forEach((key) => {
       if (req.body[key] !== undefined) lead[key] = req.body[key];
