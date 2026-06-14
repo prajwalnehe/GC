@@ -1,15 +1,21 @@
-import { LEAD_STATUSES, LEAD_SOURCES, REQUIREMENT_TYPES, INDIAN_STATES } from '../../utils/helpers';
+import { LEAD_SOURCES, REQUIREMENT_TYPES, INDIAN_STATES, BUSINESS_TYPES } from '../../utils/helpers';
 
 const LeadForm = ({ form, setForm, users = [], onSubmit, loading, submitLabel = 'Save Lead', isEdit = false }) => (
   <form onSubmit={onSubmit} className="space-y-4">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-sm font-medium mb-1.5">Name *</label>
+        <label className="block text-sm font-medium mb-1.5">Lead Person Name *</label>
         <input type="text" required value={form.leadName || ''} onChange={(e) => setForm({ ...form, leadName: e.target.value })} className="input-field" />
       </div>
       <div>
         <label className="block text-sm font-medium mb-1.5">Company Name *</label>
         <input type="text" required value={form.companyName || ''} onChange={(e) => setForm({ ...form, companyName: e.target.value })} className="input-field" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Business Type</label>
+        <select value={form.businessType || 'Other'} onChange={(e) => setForm({ ...form, businessType: e.target.value })} className="input-field">
+          {BUSINESS_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
       </div>
       {isEdit && (
         <div>
@@ -48,16 +54,6 @@ const LeadForm = ({ form, setForm, users = [], onSubmit, loading, submitLabel = 
         <label className="block text-sm font-medium mb-1.5">Requirement Type</label>
         <select value={form.requirementType || 'Web Development'} onChange={(e) => setForm({ ...form, requirementType: e.target.value })} className="input-field">
           {REQUIREMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Budget (₹)</label>
-        <input type="number" value={form.budget || ''} onChange={(e) => setForm({ ...form, budget: Number(e.target.value) })} className="input-field" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Status</label>
-        <select value={form.status || 'New Lead'} onChange={(e) => setForm({ ...form, status: e.target.value })} className="input-field">
-          {LEAD_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
       {isEdit && users.length > 0 && (

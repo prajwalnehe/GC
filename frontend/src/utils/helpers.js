@@ -1,6 +1,8 @@
 export const LEAD_STATUSES = [
   'New Lead',
   'Contacted',
+  'Interested',
+  'Not Interested',
   'Follow-up Required',
   'Meeting Scheduled',
   'Proposal Sent',
@@ -9,6 +11,9 @@ export const LEAD_STATUSES = [
   'Lost',
   'On Hold',
 ];
+
+export const FOLLOWUP_LEAD_STATUS = 'Interested';
+export const NOT_INTERESTED_STATUS = 'Not Interested';
 
 export const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -28,6 +33,22 @@ export const LEAD_SOURCES = [
   'Cold Call',
   'Email Campaign',
   'Social Media',
+  'Other',
+];
+
+export const BUSINESS_TYPES = [
+  'E-commerce',
+  'Healthcare',
+  'Education',
+  'Real Estate',
+  'Finance & Banking',
+  'Manufacturing',
+  'Retail',
+  'Hospitality',
+  'IT & Software',
+  'Marketing & Agency',
+  'Logistics',
+  'Startup',
   'Other',
 ];
 
@@ -64,6 +85,8 @@ export const getStatusColor = (status) => {
   const colors = {
     'New Lead': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     'Contacted': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+    'Interested': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+    'Not Interested': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
     'Follow-up Required': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     'Meeting Scheduled': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
     'Proposal Sent': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',

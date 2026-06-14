@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
+import FollowupLeads from './pages/FollowupLeads';
 import LeadDetails from './pages/LeadDetails';
 import FollowUps from './pages/FollowUps';
 import Proposals from './pages/Proposals';
@@ -38,6 +39,7 @@ const App = () => {
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/leads" element={<Leads />} />
+        <Route path="/followup-leads" element={<FollowupLeads />} />
         <Route path="/leads/:id" element={<LeadDetails />} />
         <Route path="/follow-ups" element={<FollowUps />} />
         <Route path="/proposals" element={<Proposals />} />

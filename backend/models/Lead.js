@@ -22,6 +22,15 @@ const leadSchema = new mongoose.Schema(
     email: { type: String, required: true, lowercase: true },
     city: { type: String, default: '' },
     state: { type: String, default: '' },
+    businessType: {
+      type: String,
+      enum: [
+        'E-commerce', 'Healthcare', 'Education', 'Real Estate', 'Finance & Banking',
+        'Manufacturing', 'Retail', 'Hospitality', 'IT & Software', 'Marketing & Agency',
+        'Logistics', 'Startup', 'Other',
+      ],
+      default: 'Other',
+    },
     leadSource: {
       type: String,
       enum: ['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Social Media', 'Other'],
@@ -39,6 +48,8 @@ const leadSchema = new mongoose.Schema(
       enum: [
         'New Lead',
         'Contacted',
+        'Interested',
+        'Not Interested',
         'Follow-up Required',
         'Meeting Scheduled',
         'Proposal Sent',

@@ -32,6 +32,7 @@ const getLeads = async (req, res) => {
     const {
       search,
       status,
+      excludeStatus,
       leadSource,
       sortBy = 'createdAt',
       sortOrder = 'desc',
@@ -50,6 +51,7 @@ const getLeads = async (req, res) => {
       ];
     }
     if (status) query.status = status;
+    if (excludeStatus) query.status = { $ne: excludeStatus };
     if (leadSource) query.leadSource = leadSource;
 
     const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
@@ -212,7 +214,7 @@ const exportLeads = async (req, res) => {
 
     const fields = [
       'leadName', 'companyName', 'contactPerson', 'mobileNumber', 'email',
-      'city', 'state', 'leadSource', 'requirementType', 'budget', 'status', 'createdAt',
+      'city', 'state', 'businessType', 'leadSource', 'requirementType', 'budget', 'status', 'createdAt',
     ];
     const data = leads.map((l) => ({
       leadName: l.leadName,
@@ -222,6 +224,7 @@ const exportLeads = async (req, res) => {
       email: l.email,
       city: l.city,
       state: l.state,
+      businessType: l.businessType,
       leadSource: l.leadSource,
       requirementType: l.requirementType,
       budget: l.budget,

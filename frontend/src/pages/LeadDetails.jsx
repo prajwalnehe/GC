@@ -108,7 +108,6 @@ const LeadDetails = () => {
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={lead.status} />
-          <span className="text-lg font-semibold text-primary">{formatCurrency(lead.budget)}</span>
         </div>
       </div>
 
@@ -127,6 +126,7 @@ const LeadDetails = () => {
                 </div>
               ))}
               <div><p className="text-xs text-secondary-500">Source</p><p className="text-sm font-medium">{lead.leadSource}</p></div>
+              <div><p className="text-xs text-secondary-500">Business Type</p><p className="text-sm font-medium">{lead.businessType || '-'}</p></div>
               <div><p className="text-xs text-secondary-500">Requirement</p><p className="text-sm font-medium">{lead.requirementType}</p></div>
               <div><p className="text-xs text-secondary-500">Assigned To</p><p className="text-sm font-medium">{lead.assignedTo?.name || '-'}</p></div>
               <div><p className="text-xs text-secondary-500">Revenue</p><p className="text-sm font-medium">{formatCurrency(lead.revenue)}</p></div>

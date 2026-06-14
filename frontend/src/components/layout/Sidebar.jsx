@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, UserCircle, FolderKanban, CreditCard,
-  FileText, Calendar, Building2, Settings, ChevronLeft, ChevronRight, Code2,
+  FileText, Calendar, Building2, Settings, ChevronLeft, ChevronRight, Code2, UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/leads', label: 'Leads', icon: Users },
+  { path: '/followup-leads', label: 'Followup Leads', icon: UserCheck },
   { path: '/follow-ups', label: 'Follow-ups', icon: Calendar },
   { path: '/proposals', label: 'Proposals', icon: FileText },
   { path: '/clients', label: 'Clients', icon: Building2 },
@@ -49,7 +50,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
         <nav className="p-3 space-y-1 mt-2">
           {filteredItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+            const isActive = location.pathname === item.path
+              || (item.path !== '/leads' && location.pathname.startsWith(item.path + '/'))
+              || (item.path === '/leads' && (location.pathname === '/leads' || /^\/leads\/[^/]+$/.test(location.pathname)));
             return (
               <Link
                 key={item.path}
