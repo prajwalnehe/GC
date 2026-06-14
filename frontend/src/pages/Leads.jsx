@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
 import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, LEAD_PENDING_STATUS, LEAD_DATE_FILTERS, formatDate, displayValue, getLeadStatusForSalesExecutive } from '../utils/helpers';
@@ -267,6 +267,15 @@ const Leads = () => {
                     )}
                     <td className="py-3 px-2">
                       <div className="flex items-center justify-end gap-1">
+                        {canViewAllLeads && lead.mobileNumber && (
+                          <a
+                            href={`tel:${lead.mobileNumber.replace(/\D/g, '')}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            Call
+                          </a>
+                        )}
                         <Link to={`/leads/${lead._id}`} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Eye className="w-4 h-4" /></Link>
                         <button onClick={() => handleEdit(lead)} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(lead._id)} className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 className="w-4 h-4" /></button>
