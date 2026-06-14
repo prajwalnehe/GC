@@ -74,6 +74,7 @@ export const AuthProvider = ({ children }) => {
   const getHomePath = () => {
     if (isAdmin) return '/dashboard';
     const allowed = user?.allowedTabs || [];
+    if (allowed.includes('dashboard')) return '/dashboard';
     const tab = NAV_TABS.find((t) => allowed.includes(t.id) && !t.adminOnly);
     return tab?.path || '/dashboard';
   };

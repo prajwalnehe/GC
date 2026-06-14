@@ -19,7 +19,7 @@ const defaultForm = () => ({
   role: 'Sales Executive',
   phone: '',
   isActive: true,
-  allowedTabs: [],
+  allowedTabs: ['dashboard'],
 });
 
 const Users = () => {
