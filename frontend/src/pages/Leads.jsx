@@ -17,9 +17,9 @@ import { Users } from 'lucide-react';
 
 const Leads = () => {
   const navigate = useNavigate();
-  const { canViewAllLeads, isLeadManager, user } = useAuth();
+  const { canViewAllLeads, user } = useAuth();
   const isSalesExecutive = user?.role === 'Sales Executive';
-  const canAddLead = !isLeadManager;
+  const canAddLead = ['Admin', 'Lead Manager', 'Sales Executive'].includes(user?.role);
   const [leads, setLeads] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);

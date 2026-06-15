@@ -1,6 +1,6 @@
 const canViewAllLeads = (user) => ['Admin', 'Lead Manager'].includes(user?.role);
 
-const canCreateLead = (user) => user?.role !== 'Lead Manager';
+const canCreateLead = (user) => ['Admin', 'Lead Manager', 'Sales Executive'].includes(user?.role);
 
 const getLeadScopeFilter = (user) => (
   canViewAllLeads(user) ? {} : { assignedTo: user._id }

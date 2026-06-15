@@ -131,7 +131,7 @@ const getLeadById = async (req, res) => {
 const createLead = async (req, res) => {
   try {
     if (!canCreateLead(req.user)) {
-      return res.status(403).json({ message: 'Lead Manager cannot create leads' });
+      return res.status(403).json({ message: 'Not authorized to create leads' });
     }
     const leadData = { ...req.body, createdBy: req.user._id };
     if (!leadData.status) leadData.status = 'Pending';

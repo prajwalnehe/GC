@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
+const Modal = ({ isOpen, onClose, title, children, size = 'md', scrollable = true }) => {
   if (!isOpen) return null;
 
   const sizes = {
@@ -13,7 +13,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white dark:bg-secondary-800 rounded-xl shadow-xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}>
+      <div className={`relative bg-white dark:bg-secondary-800 rounded-xl shadow-xl w-full ${sizes[size]} ${scrollable ? 'max-h-[90vh] overflow-y-auto' : 'overflow-visible'}`}>
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-secondary-100 dark:border-secondary-700">
           <h2 className="text-base sm:text-lg font-semibold text-secondary-800 dark:text-secondary-100 pr-4">{title}</h2>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-colors shrink-0">
