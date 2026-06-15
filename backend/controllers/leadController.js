@@ -337,12 +337,13 @@ const exportLeads = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const fields = [
-      'leadName', 'companyName', 'contactPerson', 'mobileNumber', 'email',
+      'leadName', 'companyName', 'instagramId', 'contactPerson', 'mobileNumber', 'email',
       'city', 'state', 'businessType', 'leadSource', 'requirementType', 'budget', 'status', 'createdAt',
     ];
     const data = leads.map((l) => ({
       leadName: l.leadName,
       companyName: l.companyName,
+      instagramId: l.instagramId,
       contactPerson: l.contactPerson,
       mobileNumber: l.mobileNumber,
       email: l.email,

@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
-  ArrowLeft, Mail, Phone, MapPin, Building, Calendar, User, Briefcase, Tag, Globe, UserCheck, FileText,
+  ArrowLeft, Mail, Phone, MapPin, Building, Calendar, User, Briefcase, Tag, Globe, UserCheck, FileText, Instagram,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI } from '../services/api';
 import { formatCurrency, formatDate, displayValue, displayLeadEmail } from '../utils/helpers';
 import StatusBadge from '../components/common/StatusBadge';
 import CallButton from '../components/common/CallButton';
+import InstagramButton from '../components/common/InstagramButton';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const InfoField = ({ icon: Icon, label, value, span = 1 }) => (
@@ -49,6 +50,7 @@ const LeadDetails = () => {
   const fields = [
     { icon: Building, label: 'Company', value: displayValue(lead.companyName), span: 2 },
     { icon: Phone, label: 'Mobile', value: displayValue(lead.mobileNumber) },
+    { icon: Instagram, label: 'Instagram', value: displayValue(lead.instagramId) },
     { icon: Briefcase, label: 'Business Type', value: displayValue(lead.businessType) },
     { icon: FileText, label: 'Notes', value: displayValue(lead.notes), span: 2 },
     { icon: Tag, label: 'Requirement', value: displayValue(lead.requirementType), span: 2 },
@@ -79,6 +81,9 @@ const LeadDetails = () => {
           <div className="flex items-center gap-2 shrink-0">
             {canViewAllLeads && lead.mobileNumber && (
               <CallButton phone={lead.mobileNumber} size="sm" />
+            )}
+            {canViewAllLeads && (
+              <InstagramButton instagramId={lead.instagramId} companyName={lead.companyName} size="sm" />
             )}
             <StatusBadge status={lead.status} />
           </div>

@@ -9,6 +9,7 @@ import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
 import CallButton from '../components/common/CallButton';
+import InstagramButton from '../components/common/InstagramButton';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
 import { SearchBar, Pagination, PageHeader } from '../components/common/PageElements';
@@ -219,7 +220,7 @@ const Leads = () => {
                     </th>
                   ))}
                   {canViewAllLeads && (
-                    <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Call</th>
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Call / Insta</th>
                   )}
                   {[
                     { key: 'businessType', label: 'Business Type' },
@@ -252,7 +253,10 @@ const Leads = () => {
                     <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{lead.mobileNumber}</td>
                     {canViewAllLeads && (
                       <td className="py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <CallButton phone={lead.mobileNumber} size="sm" />
+                        <div className="flex items-center gap-1.5">
+                          <CallButton phone={lead.mobileNumber} size="sm" />
+                          <InstagramButton instagramId={lead.instagramId} companyName={lead.companyName} size="sm" />
+                        </div>
                       </td>
                     )}
                     <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{displayValue(lead.businessType)}</td>

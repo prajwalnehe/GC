@@ -136,6 +136,34 @@ export const displayLeadEmail = (email) => {
   return value;
 };
 
+export const getInstagramUrl = (instagramId) => {
+  const value = displayValue(instagramId);
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  const cleaned = value.replace(/^@/, '').trim();
+  const username = cleaned.includes('instagram.com')
+    ? cleaned.split('/').filter(Boolean).pop()
+    : cleaned;
+  if (!username) return '';
+  return `https://instagram.com/${username}`;
+};
+
+export const companyNameToInstagramHandle = (companyName) => {
+  const value = displayValue(companyName);
+  if (!value) return '';
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9._]/g, '');
+};
+
+export const getLeadInstagramUrl = ({ instagramId, companyName } = {}) => {
+  const fromId = getInstagramUrl(instagramId);
+  if (fromId) return fromId;
+  const handle = companyNameToInstagramHandle(companyName);
+  return handle ? `https://instagram.com/${handle}` : '';
+};
+
 export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',

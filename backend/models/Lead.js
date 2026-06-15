@@ -17,6 +17,7 @@ const leadSchema = new mongoose.Schema(
   {
     leadName: { type: String, required: true, trim: true },
     companyName: { type: String, required: true, trim: true },
+    instagramId: { type: String, default: '', trim: true },
     contactPerson: { type: String, required: true },
     mobileNumber: { type: String, required: true },
     normalizedMobile: { type: String },
