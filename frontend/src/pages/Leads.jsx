@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown, Phone } from 'lucide-react';
+import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
-import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, LEAD_PENDING_STATUS, LEAD_DATE_FILTERS, formatDate, displayValue, getLeadStatusForSalesExecutive } from '../utils/helpers';
+import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, LEAD_PENDING_STATUS, LEAD_DATE_FILTERS, displayValue, getLeadStatusForSalesExecutive } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
 import StatusBadge from '../components/common/StatusBadge';
+import CallButton from '../components/common/CallButton';
 import EmptyState from '../components/common/EmptyState';
 import { TableSkeleton } from '../components/common/Skeleton';
-import { SearchBar, Pagination, PageHeader, TableWrapper } from '../components/common/PageElements';
+import { SearchBar, Pagination, PageHeader } from '../components/common/PageElements';
 import { Users } from 'lucide-react';
 
 const Leads = () => {
+  const navigate = useNavigate();
   const { canViewAllLeads, isLeadManager, user } = useAuth();
   const isSalesExecutive = user?.role === 'Sales Executive';
   const canAddLead = !isLeadManager;
@@ -204,15 +206,24 @@ const Leads = () => {
           />
         ) : (
           <>
-            <TableWrapper>
-            <table className="data-table min-w-[900px]">
+            <div className="w-full overflow-x-auto">
+            <table className="w-full text-sm min-w-[1000px]">
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
                   {[
-                    { key: 'leadName', label: 'Emp Name' },
                     { key: 'companyName', label: 'Company' },
-                    { key: 'businessType', label: 'Business Type' },
                     { key: 'mobileNumber', label: 'Mobile' },
+                  ].map((col) => (
+                    <th key={col.key} className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort(col.key)}>
+                      <span className="flex items-center gap-1">{col.label} <ArrowUpDown className="w-3 h-3" /></span>
+                    </th>
+                  ))}
+                  {canViewAllLeads && (
+                    <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Call</th>
+                  )}
+                  {[
+                    { key: 'businessType', label: 'Business Type' },
+                    { key: 'leadName', label: 'Emp Name' },
                     { key: 'status', label: 'Status' },
                     { key: 'createdAt', label: 'Date' },
                   ].map((col) => (
@@ -228,17 +239,51 @@ const Leads = () => {
               </thead>
               <tbody>
                 {leads.map((lead) => (
-                  <tr key={lead._id} className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30">
-                    <td className="py-3 px-2 font-medium whitespace-nowrap">{displayValue(lead.createdBy?.name || lead.leadName)}</td>
-                    <td className="py-3 px-2 whitespace-nowrap">{lead.companyName}</td>
-                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{displayValue(lead.businessType)}</td>
+                  <tr
+                    key={lead._id}
+                    onClick={() => {
+                      if (window.innerWidth < 1024) navigate(`/leads/${lead._id}`);
+                    }}
+                    className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30 cursor-pointer lg:cursor-default"
+                  >
+                    <td className="py-3 px-2 font-medium text-xs sm:text-sm max-w-[120px] sm:max-w-[160px] leading-tight">
+                      <span className="line-clamp-2 break-words">{lead.companyName}</span>
+                    </td>
                     <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{lead.mobileNumber}</td>
+                    {canViewAllLeads && (
+                      <td className="py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <CallButton phone={lead.mobileNumber} size="sm" />
+                      </td>
+                    )}
+                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{displayValue(lead.businessType)}</td>
+                    <td className="py-3 px-2 font-medium text-xs sm:text-sm max-w-[90px] sm:max-w-[110px] leading-tight align-top">
+                      {(() => {
+                        const empName = displayValue(lead.createdBy?.name || lead.leadName);
+                        const parts = empName.split(/\s+/).filter(Boolean);
+                        const mid = Math.ceil(parts.length / 2);
+                        const line1 = parts.slice(0, mid).join(' ') || empName;
+                        const line2 = parts.length > 1 ? parts.slice(mid).join(' ') : '';
+                        return (
+                          <span className="inline-block">
+                            <span className="block break-words">{line1}</span>
+                            {line2 && <span className="block break-words text-secondary-600 dark:text-secondary-400">{line2}</span>}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="py-3 px-2 whitespace-nowrap">
                       <StatusBadge status={isSalesExecutive ? getLeadStatusForSalesExecutive(lead.status) : lead.status} />
                     </td>
-                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{formatDate(lead.createdAt)}</td>
+                    <td className="py-3 px-2 text-secondary-500 text-xs sm:text-sm max-w-[56px] sm:max-w-[64px] leading-tight">
+                      {lead.createdAt ? (
+                        <span className="inline-block">
+                          <span className="block">{new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                          <span className="block">{new Date(lead.createdAt).getFullYear()}</span>
+                        </span>
+                      ) : null}
+                    </td>
                     {canViewAllLeads && (
-                      <td className="py-3 px-2">
+                      <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-col items-start gap-1.5">
                           <button
                             type="button"
@@ -269,27 +314,18 @@ const Leads = () => {
                         </div>
                       </td>
                     )}
-                    <td className="py-3 px-2">
+                    <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1 whitespace-nowrap">
-                        {canViewAllLeads && lead.mobileNumber && (
-                          <a
-                            href={`tel:${lead.mobileNumber.replace(/\D/g, '')}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                            Call
-                          </a>
-                        )}
                         <Link to={`/leads/${lead._id}`} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Eye className="w-4 h-4" /></Link>
-                        <button onClick={() => handleEdit(lead)} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Edit className="w-4 h-4" /></button>
-                        <button onClick={() => handleDelete(lead._id)} className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => handleEdit(lead)} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Edit className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => handleDelete(lead._id)} className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            </TableWrapper>
+            </div>
             <Pagination page={page} pages={pages} total={total} onPageChange={setPage} />
           </>
         )}

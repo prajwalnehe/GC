@@ -19,6 +19,7 @@ const leadSchema = new mongoose.Schema(
     companyName: { type: String, required: true, trim: true },
     contactPerson: { type: String, required: true },
     mobileNumber: { type: String, required: true },
+    normalizedMobile: { type: String },
     email: { type: String, required: true, lowercase: true },
     city: { type: String, default: '' },
     state: { type: String, default: '' },
@@ -75,5 +76,18 @@ const leadSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+leadSchema.pre('save', function setNormalizedMobile(next) {
+  if (this.mobileNumber) {
+    const digits = (this.mobileNumber || '').replace(/\D/g, '');
+    let normalized = digits;
+    if (digits.length === 11 && digits.startsWith('0')) normalized = digits.slice(1);
+    else if (digits.length > 10) normalized = digits.slice(-10);
+    this.normalizedMobile = normalized || undefined;
+  }
+  next();
+});
+
+leadSchema.index({ normalizedMobile: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Lead', leadSchema);

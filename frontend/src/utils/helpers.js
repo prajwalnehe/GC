@@ -129,6 +129,13 @@ export const displayValue = (value) => {
   return value;
 };
 
+export const displayLeadEmail = (email) => {
+  const value = displayValue(email);
+  if (!value) return '';
+  if (/@(leadcrm|growwcode)\.local$/i.test(value)) return '';
+  return value;
+};
+
 export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',

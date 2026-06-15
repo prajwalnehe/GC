@@ -4,6 +4,7 @@ const Proposal = require('../models/Proposal');
 const { Parser } = require('json2csv');
 const { getLeadScopeFilter, canAccessLead, canCreateLead, canChangeLeadStatus } = require('../utils/roles');
 const { createClientFromLead } = require('../utils/clientFromLead');
+const { normalizeMobile, findLeadByMobile } = require('../utils/mobileUtils');
 
 const FOLLOWUP_LIST_STATUSES = ['Interested', 'Not Interested'];
 
@@ -136,6 +137,14 @@ const createLead = async (req, res) => {
     if (!leadData.status) leadData.status = 'Pending';
     if (!leadData.assignedTo) leadData.assignedTo = req.user._id;
 
+    if (leadData.mobileNumber) {
+      const existing = await findLeadByMobile(leadData.mobileNumber);
+      if (existing) {
+        return res.status(400).json({ message: 'Mobile number already exists' });
+      }
+      leadData.normalizedMobile = normalizeMobile(leadData.mobileNumber);
+    }
+
     const lead = await Lead.create(leadData);
 
     lead.activities.push({
@@ -161,6 +170,9 @@ const createLead = async (req, res) => {
       .populate('createdBy', 'name');
     res.status(201).json(populated);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Mobile number already exists' });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -176,6 +188,13 @@ const updateLead = async (req, res) => {
 
     if (!canChangeLeadStatus(req.user) && req.body.status !== undefined) {
       delete req.body.status;
+    }
+
+    if (req.body.mobileNumber) {
+      const existing = await findLeadByMobile(req.body.mobileNumber, lead._id);
+      if (existing) {
+        return res.status(400).json({ message: 'Mobile number already exists' });
+      }
     }
 
     Object.keys(req.body).forEach((key) => {
@@ -221,6 +240,9 @@ const updateLead = async (req, res) => {
       .populate('createdBy', 'name');
     res.json(updated);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Mobile number already exists' });
+    }
     res.status(500).json({ message: error.message });
   }
 };

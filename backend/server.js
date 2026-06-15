@@ -42,6 +42,16 @@ const startServer = async () => {
   await seedAdminUser();
   await Proposal.updateMany({ status: 'Draft' }, { $set: { status: 'Pending' } });
   await Lead.updateMany({ status: 'New Lead' }, { $set: { status: 'Pending' } });
+  const leads = await Lead.find({ mobileNumber: { $exists: true, $ne: '' } });
+  for (const lead of leads) {
+    const digits = (lead.mobileNumber || '').replace(/\D/g, '');
+    let normalized = digits;
+    if (digits.length === 11 && digits.startsWith('0')) normalized = digits.slice(1);
+    else if (digits.length > 10) normalized = digits.slice(-10);
+    if (normalized && lead.normalizedMobile !== normalized) {
+      await Lead.updateOne({ _id: lead._id }, { $set: { normalizedMobile: normalized } });
+    }
+  }
   const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
