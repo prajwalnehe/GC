@@ -55,6 +55,7 @@ const getProposalById = async (req, res) => {
 const createProposal = async (req, res) => {
   try {
     const data = { ...req.body, createdBy: req.user._id };
+    if (!data.proposalType) data.proposalType = 'Pending';
     if (req.file) {
       data.pdfFile = req.file.filename;
       data.pdfOriginalName = req.file.originalname;

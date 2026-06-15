@@ -14,7 +14,7 @@ const proposalSchema = new mongoose.Schema(
     pdfFile: { type: String, default: '' },
     pdfOriginalName: { type: String, default: '' },
     notes: { type: String, default: '' },
-    proposalType: { type: String, enum: ['IN', 'OUT'] },
+    proposalType: { type: String, enum: ['Pending', 'IN', 'OUT'], default: 'Pending' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

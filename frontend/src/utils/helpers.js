@@ -76,7 +76,7 @@ export const REQUIREMENT_TYPES = [
 ];
 
 export const PROPOSAL_STATUSES = ['Pending', 'Sent', 'Approved', 'Rejected'];
-export const PROPOSAL_TYPES = ['IN', 'OUT'];
+export const PROPOSAL_TYPES = ['Pending', 'IN', 'OUT'];
 
 export const PROJECT_STATUSES = ['Planning', 'In Progress', 'Testing', 'Completed', 'On Hold'];
 

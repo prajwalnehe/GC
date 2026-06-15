@@ -5,6 +5,7 @@ const XLSX = require('xlsx');
 const { getLeadScopeFilter, canAccessLead, canCreateLead, canChangeLeadStatus } = require('../utils/roles');
 const { createClientFromLead } = require('../utils/clientFromLead');
 const { normalizeMobile, findLeadByMobile } = require('../utils/mobileUtils');
+const { deriveInstagramIdFromCompany } = require('../utils/instagramUtils');
 
 const FOLLOWUP_LIST_STATUSES = ['Interested', 'Not Interested'];
 
@@ -65,7 +66,12 @@ const getLeads = async (req, res) => {
         { mobileNumber: { $regex: search, $options: 'i' } },
       ];
     }
-    if (status) {
+    if (req.query.followupList === 'true') {
+      query.status = { $in: FOLLOWUP_LIST_STATUSES };
+      if (req.user.role !== 'Lead Manager') {
+        query.clientFollowupType = { $nin: ['IN', 'OUT'] };
+      }
+    } else if (status) {
       query.status = status;
       if (FOLLOWUP_LIST_STATUSES.includes(status) && req.user.role !== 'Lead Manager') {
         query.clientFollowupType = { $nin: ['IN', 'OUT'] };
@@ -83,7 +89,7 @@ const getLeads = async (req, res) => {
     const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const isFollowUpList = FOLLOWUP_LIST_STATUSES.includes(status);
+    const isFollowUpList = req.query.followupList === 'true' || FOLLOWUP_LIST_STATUSES.includes(status);
 
     const leadQuery = Lead.find(query)
       .populate('assignedTo', 'name email')
@@ -136,6 +142,9 @@ const createLead = async (req, res) => {
     const leadData = { ...req.body, createdBy: req.user._id };
     if (!leadData.status) leadData.status = 'Pending';
     if (!leadData.assignedTo) leadData.assignedTo = req.user._id;
+    if (leadData.companyName) {
+      leadData.instagramId = deriveInstagramIdFromCompany(leadData.companyName);
+    }
 
     if (leadData.mobileNumber) {
       const existing = await findLeadByMobile(leadData.mobileNumber);
@@ -200,6 +209,10 @@ const updateLead = async (req, res) => {
     Object.keys(req.body).forEach((key) => {
       if (req.body[key] !== undefined) lead[key] = req.body[key];
     });
+
+    if (req.body.companyName !== undefined) {
+      lead.instagramId = deriveInstagramIdFromCompany(req.body.companyName);
+    }
 
     if (req.body.status && req.body.status !== oldStatus) {
       lead.activities.push({
@@ -280,13 +293,13 @@ const markClientFollowup = async (req, res) => {
       performedBy: req.user._id,
     });
 
-    const existingProposal = await Proposal.findOne({ lead: lead._id, proposalType: type });
+    const existingProposal = await Proposal.findOne({ lead: lead._id });
     if (!existingProposal) {
       await Proposal.create({
         lead: lead._id,
-        title: `${lead.companyName} - ${type}`,
+        title: lead.companyName,
         amount: Number(lead.budget) || 0,
-        proposalType: type,
+        proposalType: 'Pending',
         notes: `Added from Followup Leads (${type})`,
         status: 'Pending',
         createdBy: req.user._id,
@@ -357,7 +370,7 @@ const exportLeads = async (req, res) => {
     const data = leads.map((l) => ({
       leadName: l.leadName,
       companyName: l.companyName,
-      instagramId: l.instagramId || '',
+      instagramId: l.instagramId || deriveInstagramIdFromCompany(l.companyName),
       contactPerson: l.contactPerson,
       mobileNumber: l.mobileNumber,
       email: l.email,

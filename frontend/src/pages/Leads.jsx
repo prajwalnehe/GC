@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Plus, Download, Trash2, Edit, Eye, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { leadsAPI, usersAPI } from '../services/api';
 import { LEAD_SOURCES, FOLLOWUP_LEAD_STATUS, NOT_INTERESTED_STATUS, LEAD_PENDING_STATUS, LEAD_DATE_FILTERS, displayValue, getLeadStatusForSalesExecutive } from '../utils/helpers';
 import Modal from '../components/common/Modal';
 import LeadForm from '../components/leads/LeadForm';
+import LeadDetailsModal from '../components/leads/LeadDetailsModal';
 import StatusBadge from '../components/common/StatusBadge';
 import CallButton from '../components/common/CallButton';
 import InstagramButton from '../components/common/InstagramButton';
@@ -16,7 +16,6 @@ import { SearchBar, Pagination, PageHeader } from '../components/common/PageElem
 import { Users } from 'lucide-react';
 
 const Leads = () => {
-  const navigate = useNavigate();
   const { canViewAllLeads, user } = useAuth();
   const isSalesExecutive = user?.role === 'Sales Executive';
   const canAddLead = ['Admin', 'Lead Manager', 'Sales Executive'].includes(user?.role);
@@ -25,7 +24,7 @@ const Leads = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('today');
+  const [dateFilter, setDateFilter] = useState('all');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
@@ -35,8 +34,7 @@ const Leads = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
-  const [updatingInterest, setUpdatingInterest] = useState(null);
-
+  const [viewLeadId, setViewLeadId] = useState(null);
   const fetchLeads = async () => {
     setLoading(true);
     try {
@@ -109,22 +107,6 @@ const Leads = () => {
       toast.error(err.response?.data?.message || 'Failed to save lead');
     }
     setSaving(false);
-  };
-
-  const handleInterest = async (lead, interested) => {
-    const newStatus = interested ? FOLLOWUP_LEAD_STATUS : NOT_INTERESTED_STATUS;
-    if (lead.status === newStatus) return;
-    setUpdatingInterest(lead._id);
-    try {
-      await leadsAPI.update(lead._id, { status: newStatus });
-      setLeads((prev) => prev.filter((l) => l._id !== lead._id));
-      setTotal((prev) => Math.max(0, prev - 1));
-      toast.success(interested ? 'Lead moved to Followup Leads' : 'Moved to Followup Leads (Not Interested)');
-    } catch {
-      toast.error('Failed to update interest');
-      fetchLeads();
-    }
-    setUpdatingInterest(null);
   };
 
   const handleDelete = async (id) => {
@@ -210,60 +192,45 @@ const Leads = () => {
           />
         ) : (
           <>
-            <div className="w-full overflow-x-auto">
-            <table className="w-full text-sm min-w-[1000px]">
+            <div className="w-full overflow-x-auto lg:overflow-visible">
+            <table className="w-full text-xs sm:text-sm lg:text-sm lg:min-w-[1000px]">
               <thead>
                 <tr className="border-b border-secondary-100 dark:border-secondary-700">
-                  {[
-                    { key: 'companyName', label: 'Company' },
-                    { key: 'mobileNumber', label: 'Mobile' },
-                  ].map((col) => (
-                    <th key={col.key} className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort(col.key)}>
-                      <span className="flex items-center gap-1">{col.label} <ArrowUpDown className="w-3 h-3" /></span>
-                    </th>
-                  ))}
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort('companyName')}>
+                    <span className="flex items-center gap-1">Company <ArrowUpDown className="w-3 h-3" /></span>
+                  </th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort('leadName')}>
+                    <span className="flex items-center gap-1">Emp Name <ArrowUpDown className="w-3 h-3" /></span>
+                  </th>
+                  <th className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort('businessType')}>
+                    <span className="flex items-center gap-1">Business Type <ArrowUpDown className="w-3 h-3" /></span>
+                  </th>
                   {canViewAllLeads && (
                     <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Call / Insta</th>
                   )}
-                  {[
-                    { key: 'businessType', label: 'Business Type' },
-                    { key: 'leadName', label: 'Emp Name' },
-                    { key: 'status', label: 'Status' },
-                    { key: 'createdAt', label: 'Date' },
-                  ].map((col) => (
-                    <th key={col.key} className="text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort(col.key)}>
-                      <span className="flex items-center gap-1">{col.label} <ArrowUpDown className="w-3 h-3" /></span>
-                    </th>
-                  ))}
-                  {canViewAllLeads && (
-                    <th className="text-left py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Interest</th>
-                  )}
-                  <th className="text-right py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Actions</th>
+                  <th className="hidden lg:table-cell text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort('mobileNumber')}>
+                    <span className="flex items-center gap-1">Mobile <ArrowUpDown className="w-3 h-3" /></span>
+                  </th>
+                  <th className="hidden lg:table-cell text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort('status')}>
+                    <span className="flex items-center gap-1">Status <ArrowUpDown className="w-3 h-3" /></span>
+                  </th>
+                  <th className="hidden lg:table-cell text-left py-3 px-2 font-medium text-secondary-500 cursor-pointer hover:text-primary whitespace-nowrap" onClick={() => toggleSort('createdAt')}>
+                    <span className="flex items-center gap-1">Date <ArrowUpDown className="w-3 h-3" /></span>
+                  </th>
+                  <th className="hidden lg:table-cell text-right py-3 px-2 font-medium text-secondary-500 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => (
                   <tr
                     key={lead._id}
-                    onClick={() => {
-                      if (window.innerWidth < 1024) navigate(`/leads/${lead._id}`);
-                    }}
-                    className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30 cursor-pointer lg:cursor-default"
+                    onClick={() => setViewLeadId(lead._id)}
+                    className="border-b border-secondary-50 dark:border-secondary-700/50 hover:bg-secondary-50 dark:hover:bg-secondary-700/30 cursor-pointer"
                   >
-                    <td className="py-3 px-2 font-medium text-xs sm:text-sm max-w-[120px] sm:max-w-[160px] leading-tight">
+                    <td className="py-2.5 lg:py-3 px-2 font-medium text-xs sm:text-sm max-w-[100px] sm:max-w-[160px] leading-tight align-top">
                       <span className="line-clamp-2 break-words">{lead.companyName}</span>
                     </td>
-                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{lead.mobileNumber}</td>
-                    {canViewAllLeads && (
-                      <td className="py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1.5">
-                          <CallButton phone={lead.mobileNumber} size="sm" />
-                          <InstagramButton instagramId={lead.instagramId} companyName={lead.companyName} size="sm" />
-                        </div>
-                      </td>
-                    )}
-                    <td className="py-3 px-2 text-secondary-500 whitespace-nowrap">{displayValue(lead.businessType)}</td>
-                    <td className="py-3 px-2 font-medium text-xs sm:text-sm max-w-[90px] sm:max-w-[110px] leading-tight align-top">
+                    <td className="py-2.5 lg:py-3 px-2 font-medium text-xs sm:text-sm max-w-[90px] sm:max-w-[110px] leading-tight align-top">
                       {(() => {
                         const empName = displayValue(lead.createdBy?.name || lead.leadName);
                         const parts = empName.split(/\s+/).filter(Boolean);
@@ -278,10 +245,22 @@ const Leads = () => {
                         );
                       })()}
                     </td>
-                    <td className="py-3 px-2 whitespace-nowrap">
+                    <td className="py-2.5 lg:py-3 px-2 text-secondary-500 text-xs sm:text-sm max-w-[90px] leading-tight align-top">
+                      <span className="line-clamp-2 break-words">{displayValue(lead.businessType)}</span>
+                    </td>
+                    {canViewAllLeads && (
+                      <td className="py-2.5 lg:py-3 px-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1.5">
+                          <CallButton phone={lead.mobileNumber} size="sm" />
+                          <InstagramButton instagramId={lead.instagramId} companyName={lead.companyName} size="sm" />
+                        </div>
+                      </td>
+                    )}
+                    <td className="hidden lg:table-cell py-3 px-2 text-secondary-500 whitespace-nowrap">{lead.mobileNumber}</td>
+                    <td className="hidden lg:table-cell py-3 px-2 whitespace-nowrap">
                       <StatusBadge status={isSalesExecutive ? getLeadStatusForSalesExecutive(lead.status) : lead.status} />
                     </td>
-                    <td className="py-3 px-2 text-secondary-500 text-xs sm:text-sm max-w-[56px] sm:max-w-[64px] leading-tight">
+                    <td className="hidden lg:table-cell py-3 px-2 text-secondary-500 text-xs sm:text-sm max-w-[56px] sm:max-w-[64px] leading-tight">
                       {lead.createdAt ? (
                         <span className="inline-block">
                           <span className="block">{new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
@@ -289,41 +268,9 @@ const Leads = () => {
                         </span>
                       ) : null}
                     </td>
-                    {canViewAllLeads && (
-                      <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex flex-col items-start gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleInterest(lead, true)}
-                            disabled={updatingInterest === lead._id}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-                              lead.status === FOLLOWUP_LEAD_STATUS
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300'
-                            }`}
-                          >
-                            <ThumbsUp className="w-3.5 h-3.5" />
-                            Interested
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInterest(lead, false)}
-                            disabled={updatingInterest === lead._id}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-                              lead.status === NOT_INTERESTED_STATUS
-                                ? 'bg-red-500 text-white'
-                                : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300'
-                            }`}
-                          >
-                            <ThumbsDown className="w-3.5 h-3.5" />
-                            Not Interested
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                    <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
+                    <td className="hidden lg:table-cell py-3 px-2" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1 whitespace-nowrap">
-                        <Link to={`/leads/${lead._id}`} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Eye className="w-4 h-4" /></Link>
+                        <button type="button" onClick={() => setViewLeadId(lead._id)} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Eye className="w-4 h-4" /></button>
                         <button type="button" onClick={() => handleEdit(lead)} className="p-1.5 rounded hover:bg-secondary-100 dark:hover:bg-secondary-600"><Edit className="w-4 h-4" /></button>
                         <button type="button" onClick={() => handleDelete(lead._id)} className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 className="w-4 h-4" /></button>
                       </div>
@@ -341,6 +288,13 @@ const Leads = () => {
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingLead ? 'Edit Lead' : 'Create Lead'} size="lg">
         <LeadForm form={form} setForm={setForm} users={users} onSubmit={handleSubmit} loading={saving} isEdit={!!editingLead} />
       </Modal>
+
+      <LeadDetailsModal
+        leadId={viewLeadId}
+        isOpen={!!viewLeadId}
+        onClose={() => setViewLeadId(null)}
+        onUpdated={fetchLeads}
+      />
     </div>
   );
 };

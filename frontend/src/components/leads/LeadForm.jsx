@@ -12,10 +12,6 @@ const LeadForm = ({ form, setForm, users = [], onSubmit, loading, submitLabel = 
         <input type="text" required value={form.companyName || ''} onChange={(e) => setForm({ ...form, companyName: e.target.value })} className="input-field" />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1.5">Instagram ID</label>
-        <input type="text" value={form.instagramId || ''} onChange={(e) => setForm({ ...form, instagramId: e.target.value })} placeholder="@companyname" className="input-field" />
-      </div>
-      <div>
         <label className="block text-sm font-medium mb-1.5">Business Type</label>
         <select value={form.businessType || 'Other'} onChange={(e) => setForm({ ...form, businessType: e.target.value })} className="input-field">
           {BUSINESS_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}

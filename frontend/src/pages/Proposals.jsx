@@ -18,7 +18,7 @@ const Proposals = () => {
   const [pages, setPages] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ title: '', amount: '', lead: '', status: 'Pending', proposalType: 'IN', notes: '' });
+  const [form, setForm] = useState({ title: '', amount: '', lead: '', status: 'Pending', proposalType: 'Pending', notes: '' });
   const [pdfFile, setPdfFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(null);
@@ -64,14 +64,14 @@ const Proposals = () => {
     const formData = new FormData();
     formData.append(field, value);
     if (field === 'proposalType') {
-      const baseTitle = proposal.title.replace(/ - (IN|OUT)$/, '');
+      const baseTitle = proposal.title.replace(/ - (Pending|IN|OUT)$/, '');
       formData.append('title', `${baseTitle} - ${value}`);
     }
     try {
       const { data } = await proposalsAPI.update(proposal._id, formData);
       setProposals((prev) => prev.map((p) => (p._id === proposal._id ? data : p)));
       toast.success(
-        status === 'Approved' ? 'Added to Clients'
+        field === 'status' && value === 'Approved' ? 'Added to Clients'
           : field === 'proposalType' ? 'Type updated' : 'Status updated'
       );
     } catch (err) {
@@ -84,7 +84,7 @@ const Proposals = () => {
   return (
     <div>
       <PageHeader title="Proposals" subtitle="Manage client proposals" action={
-        <button onClick={() => { setEditing(null); setForm({ title: '', amount: '', lead: '', status: 'Pending', proposalType: 'IN', notes: '' }); setPdfFile(null); setShowModal(true); }} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+        <button onClick={() => { setEditing(null); setForm({ title: '', amount: '', lead: '', status: 'Pending', proposalType: 'Pending', notes: '' }); setPdfFile(null); setShowModal(true); }} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" /> Add Proposal
         </button>
       } />
@@ -114,13 +114,15 @@ const Proposals = () => {
                     <td className="py-3 px-2 max-w-[100px] lg:max-w-[120px] truncate">{displayValue(p.lead?.leadName)}</td>
                     <td className="py-3 px-2 whitespace-nowrap">
                       <select
-                        value={p.proposalType || 'IN'}
+                        value={p.proposalType || 'Pending'}
                         disabled={updating === `${p._id}-proposalType`}
                         onChange={(e) => handleFieldUpdate(p, 'proposalType', e.target.value)}
-                        className={`input-field py-1.5 px-2 text-xs w-[72px] font-medium ${
-                          (p.proposalType || 'IN') === 'IN'
+                        className={`input-field py-1.5 px-2 text-xs min-w-[88px] font-medium ${
+                          (p.proposalType || 'Pending') === 'IN'
                             ? 'text-emerald-700 dark:text-emerald-300'
-                            : 'text-red-700 dark:text-red-300'
+                            : (p.proposalType || 'Pending') === 'OUT'
+                              ? 'text-red-700 dark:text-red-300'
+                              : 'text-amber-700 dark:text-amber-300'
                         }`}
                       >
                         {PROPOSAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -138,7 +140,7 @@ const Proposals = () => {
                     <td className="py-3 px-2">
                       <div className="flex justify-end gap-1 whitespace-nowrap">
                         {p.pdfFile && <a href={`/uploads/${p.pdfFile}`} target="_blank" rel="noreferrer" className="p-1.5 rounded hover:bg-secondary-100"><Download className="w-4 h-4" /></a>}
-                        <button onClick={() => { setEditing(p); setForm({ title: p.title, amount: p.amount, lead: p.lead?._id || p.lead, status: p.status, proposalType: p.proposalType || 'IN', notes: p.notes }); setShowModal(true); }} className="p-1.5 rounded hover:bg-secondary-100"><Edit className="w-4 h-4" /></button>
+                        <button onClick={() => { setEditing(p); setForm({ title: p.title, amount: p.amount, lead: p.lead?._id || p.lead, status: p.status, proposalType: p.proposalType || 'Pending', notes: p.notes }); setShowModal(true); }} className="p-1.5 rounded hover:bg-secondary-100"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(p._id)} className="p-1.5 rounded hover:bg-red-50 text-red-500"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
