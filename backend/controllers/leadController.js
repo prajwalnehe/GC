@@ -1,7 +1,7 @@
 const Lead = require('../models/Lead');
 const Notification = require('../models/Notification');
 const Proposal = require('../models/Proposal');
-const { Parser } = require('json2csv');
+const XLSX = require('xlsx');
 const { getLeadScopeFilter, canAccessLead, canCreateLead, canChangeLeadStatus } = require('../utils/roles');
 const { createClientFromLead } = require('../utils/clientFromLead');
 const { normalizeMobile, findLeadByMobile } = require('../utils/mobileUtils');
@@ -336,14 +336,28 @@ const exportLeads = async (req, res) => {
       .populate('assignedTo', 'name')
       .sort({ createdAt: -1 });
 
-    const fields = [
-      'leadName', 'companyName', 'instagramId', 'contactPerson', 'mobileNumber', 'email',
-      'city', 'state', 'businessType', 'leadSource', 'requirementType', 'budget', 'status', 'createdAt',
+    const columns = [
+      { key: 'leadName', label: 'Emp Name' },
+      { key: 'companyName', label: 'Company Name' },
+      { key: 'instagramId', label: 'Instagram ID' },
+      { key: 'contactPerson', label: 'Contact Person' },
+      { key: 'mobileNumber', label: 'Mobile' },
+      { key: 'email', label: 'Email' },
+      { key: 'city', label: 'City' },
+      { key: 'state', label: 'State' },
+      { key: 'businessType', label: 'Business Type' },
+      { key: 'leadSource', label: 'Lead Source' },
+      { key: 'requirementType', label: 'Requirement' },
+      { key: 'budget', label: 'Budget' },
+      { key: 'status', label: 'Status' },
+      { key: 'assignedTo', label: 'Assigned To' },
+      { key: 'createdAt', label: 'Created Date' },
     ];
+
     const data = leads.map((l) => ({
       leadName: l.leadName,
       companyName: l.companyName,
-      instagramId: l.instagramId,
+      instagramId: l.instagramId || '',
       contactPerson: l.contactPerson,
       mobileNumber: l.mobileNumber,
       email: l.email,
@@ -354,15 +368,24 @@ const exportLeads = async (req, res) => {
       requirementType: l.requirementType,
       budget: l.budget,
       status: l.status,
-      createdAt: l.createdAt,
       assignedTo: l.assignedTo?.name || '',
+      createdAt: l.createdAt ? new Date(l.createdAt).toLocaleDateString('en-IN') : '',
     }));
 
-    const parser = new Parser({ fields: [...fields, 'assignedTo'] });
-    const csv = parser.parse(data);
-    res.header('Content-Type', 'text/csv');
-    res.attachment('leads-export.csv');
-    res.send(csv);
+    const worksheetData = [
+      columns.map((col) => col.label),
+      ...data.map((row) => columns.map((col) => row[col.key] ?? '')),
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Leads');
+
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=leads-export.xlsx');
+    res.send(buffer);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

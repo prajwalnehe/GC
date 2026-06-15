@@ -55,7 +55,7 @@ export const leadsAPI = {
   delete: (id) => API.delete(`/leads/${id}`),
   addNote: (id, data) => API.post(`/leads/${id}/notes`, data),
   markClientFollowup: (id, data) => API.post(`/leads/${id}/client-followup`, data),
-  exportCSV: () => API.get('/leads/export', { responseType: 'blob' }),
+  exportExcel: () => API.get('/leads/export', { responseType: 'blob' }),
 };
 
 // Follow-ups

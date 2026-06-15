@@ -140,13 +140,16 @@ const Leads = () => {
 
   const handleExport = async () => {
     try {
-      const { data } = await leadsAPI.exportCSV();
-      const url = window.URL.createObjectURL(new Blob([data]));
+      const { data } = await leadsAPI.exportExcel();
+      const url = window.URL.createObjectURL(
+        new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      );
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'leads-export.csv';
+      a.download = 'leads-export.xlsx';
       a.click();
-      toast.success('Export downloaded');
+      window.URL.revokeObjectURL(url);
+      toast.success('Excel file downloaded');
     } catch {
       toast.error('Export failed');
     }
